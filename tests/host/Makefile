@@ -1,0 +1,35 @@
+# Harness pe PC (gcc + ASan/UBSan) pentru funcțiile pure din webMAN.
+#   make -C tests/host test
+SRC := ../..
+CFLAGS := -std=gnu99 -g -O1 -Wall -Wno-unused-function -fno-omit-frame-pointer \
+	-fsanitize=address,undefined -fno-sanitize=alignment -fno-sanitize-recover=undefined
+# alignment: memcpy64 copiază prin u64* nealiniat, ceea ce pe PPU e permis
+
+EXTRACT := \
+	include/init/compare.h:islike \
+	include/init/string.h:strcopy,strncopy,memcpy64 \
+	include/init/eval.h:get_value,get_param \
+	include/init/html.h:htmlenc \
+	include/file/file.h:normalized_len,normalize_path \
+	include/ftp.h:parsePath,absPath,ssplit \
+	include/mount/cue_file.h:get_line
+
+.PHONY: test clean
+test: t
+	./run.sh ./t known-bugs.txt
+
+t: tests.c shim.h test.h gen/webman.inc gen/consts.h
+	$(CC) $(CFLAGS) -o $@ tests.c
+
+gen/webman.inc: extract.sh $(foreach e,$(EXTRACT),$(SRC)/$(firstword $(subst :, ,$(e))))
+	@mkdir -p gen
+	@: > $@.tmp
+	@for e in $(EXTRACT); do ./extract.sh $(SRC)/$${e%%:*} $$(echo $${e#*:} | tr , ' ') >> $@.tmp || exit 1; done
+	@mv $@.tmp $@
+
+gen/consts.h: $(SRC)/include/init/paths.h
+	@mkdir -p gen
+	LC_ALL=C grep -E '^#define[[:space:]]+(MAX_LINE_LEN|STD_PATH_LEN|MAX_PATH_LEN)[[:space:]]' $< > $@
+
+clean:
+	rm -rf t gen

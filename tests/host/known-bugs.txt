@@ -1,0 +1,7 @@
+# Teste care pică pe codul actual: reproduc bug-uri din raport încă nereparate.
+# Se scot de aici odată cu fix-ul (S18).
+atk_ftp_ssplit_off_by_one
+atk_htmlenc_overflow
+atk_htmlenc_xml_special
+atk_cue_long_line
+atk_abspath_overflow

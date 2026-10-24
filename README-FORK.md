@@ -21,3 +21,11 @@ Merge-urile din upstream trec. Ele aduc modificările upstream neschimbate.
 ## Build
 
 Cu Cell SDK (`CELL_SDK` setat, `ppu-lv2-*` în `PATH`) și `scetool` în `PATH`: `./_Make.sh`. Scriptul se oprește dacă `make` eșuează.
+
+## Teste pe PC
+
+```sh
+make -C tests/host test
+```
+
+Funcțiile pure (`ssplit`, `get_param`, `htmlenc`, `get_line`, `absPath`) sunt extrase din sursa reală la fiecare rulare și compilate cu gcc, ASan și UBSan. Testele `atk_*` reproduc bug-uri din raport. Cele încă nereparate sunt în `tests/host/known-bugs.txt` și trebuie să pice (XFAIL). Când un fix le face să treacă, suita cere scoaterea lor din listă.
