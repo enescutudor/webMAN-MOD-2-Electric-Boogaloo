@@ -3,6 +3,7 @@ project('ps3netsrv', ['c', 'cpp'],
   version : '0.1',
   default_options : [
     'warning_level=3',
+    'buildtype=release',
     'c_std=c99',
     'cpp_std=c++11'
     ]
@@ -14,7 +15,7 @@ ps3netsrv_src = files(
   'src/compat.c',
   'src/File.cpp',
   'src/main.cpp',
-  'src/VIsoFile.cpp'
+  'src/VIsoFile2.cpp'
 )
 if host_machine.system() == 'windows'
   ps3netsrv_src += files(

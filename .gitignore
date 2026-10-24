@@ -287,3 +287,4 @@ $RECYCLE.BIN/
 # Fork: fișiere locale
 .claude/
 TOKENS.md
+__pycache__/

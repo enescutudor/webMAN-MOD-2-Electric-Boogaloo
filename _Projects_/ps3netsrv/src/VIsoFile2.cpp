@@ -466,7 +466,7 @@ VIsoFile::VIsoFile(bool ps3Mode)
 	padAreaStart = 0;
 	padAreaSize = 0;
 
-	fd = 0;
+	fd = INVALID_FD;
 	lastPath = NULL;
 }
 
@@ -562,9 +562,10 @@ void VIsoFile::reset(void)
 
 void VIsoFile::fd_reset(void)
 {
-	close_file(fd);
+	if (FD_OK(fd))
+		close_file(fd);
 
-	fd = 0;
+	fd = INVALID_FD;
 	lastPath = NULL;
 }
 
@@ -1673,7 +1674,8 @@ ssize_t VIsoFile::read(void *buf, size_t nbyte)
 					{
 						if(lastPath != fileList->path)
 						{
-							close_file(fd);
+							if (FD_OK(fd))
+								close_file(fd);
 							lastPath = fileList->path;
 
 							fd = open_file(fileList->path, O_RDONLY);
