@@ -1,0 +1,45 @@
+# Zona ROȘIE (ANALIZA-webMAN-MOD.md, 8.1): fișiere care NU se modifică în fork.
+# Se preiau doar neschimbate, prin merge din upstream.
+# O linie = o cale exactă; o cale terminată în / = tot directorul.
+# Verificat de tools/check-protected.sh și de hook-ul pre-commit.
+
+# Flash ROS, EPROM
+include/feat/rospatch.h
+include/cmd/ros.h
+include/cmd/recovery.h
+
+# Kernel Cobra, acces raw la storage
+cobra/
+
+# Offset-uri LV2 per firmware
+include/init/firmware.h
+
+# Peek/poke LV1/LV2, payload-uri, stealth, wrappere syscall8
+include/ps3mapi/peek_poke.h
+include/ps3mapi/debug_mem.h
+include/ps3mapi/stealth.h
+include/ps3mapi/ps3mapi_payload.h
+include/ps3mapi/artemis.h
+include/ps3mapi/ps3mapi.h
+
+# IDPS/PSID
+include/feat/idps.h
+include/cmd/consoleid.h
+
+# Superblock UFS în LV2
+include/file/hdd_unlock_space.h
+
+# Registrul de sistem
+include/feat/xregistry.h
+
+# Ventilator, SYSCON
+include/poll/fancontrol.h
+include/poll/fancontrol2.h
+
+# Poke-uri LV1/LV2
+include/feat/clock.h
+include/mount/ps2_disc.h
+include/mount/mount_noncobra.h
+
+# Cod de boot/kernel
+_Projects_/boot_mamba/
