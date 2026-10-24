@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Test pentru jQuery UI sortable, ca în lista de jocuri (games_html.h: $("#mg").sortable()).
+     Se copiază lângă jquery.min.js și jquery-ui.min.js și se randează cu firefox --headless --screenshot.
+     Rezultatul apare cu litere mari: PASS sau FAIL și motivul. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="jquery.min.js"></script>
+<script src="jquery-ui.min.js"></script>
+<style>
+	#mg div { width: 200px; height: 40px; margin: 4px; background: #ccc; }
+	#rez { font: bold 64px sans-serif; }
+</style>
+</head>
+<body>
+<div id="mg"><div id="a">A</div><div id="b">B</div><div id="c">C</div></div>
+<div id="rez">...</div>
+<script>
+function rezultat(ok, motiv) {
+	var r = document.getElementById("rez");
+	r.textContent = (ok ? "PASS " : "FAIL ") + motiv;
+	r.style.color = ok ? "green" : "red";
+}
+function mouse(tip, el, x, y) {
+	var e = document.createEvent("MouseEvents");
+	e.initMouseEvent(tip, true, true, window, 0, x, y, x, y, false, false, false, false, 0, null);
+	el.dispatchEvent(e);
+}
+try {
+	if (!$.fn.sortable) throw new Error("$.fn.sortable lipsește");
+	$("#mg").sortable();
+	if (!$("#mg").hasClass("ui-sortable")) throw new Error("sortable nu s-a inițializat");
+	// trage A sub C
+	var a = document.getElementById("a"), c = document.getElementById("c");
+	var ra = a.getBoundingClientRect(), rc = c.getBoundingClientRect();
+	var x = ra.left + 10, y0 = ra.top + 10, y1 = rc.bottom - 2;
+	mouse("mousedown", a, x, y0);
+	for (var y = y0; y <= y1; y += 5) mouse("mousemove", document, x, y);
+	mouse("mouseup", document, x, y1);
+	var ordine = $("#mg").children().map(function () { return this.id; }).get().join("");
+	rezultat(ordine === "bca", "ordine " + ordine + ", jQuery UI " + $.ui.version);
+} catch (e) {
+	rezultat(false, e.message);
+}
+</script>
+</body>
+</html>
