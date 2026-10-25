@@ -5,6 +5,7 @@
   netsrv_test.py <ps3netsrv> <data-dir> fd0      without stdin: closing a virtual ISO must not break other sockets
   netsrv_test.py <ps3netsrv> <data-dir> bench <big-file>
                                                   MB/s and server CPU, on <big-file> and on the virtual ISOs
+  netsrv_test.py <ps3netsrv> <data-dir> small     latency of 500 small READ_FILE requests (like a game list scan)
 
 <data-dir> is created on the first run (PS3ISO/t.iso, viso/ and viso-small/ with 4,000 files, random data)
 and reused afterwards, so the MD5s are comparable between builds. For bench, <big-file> is hard-linked
@@ -149,6 +150,18 @@ def main():
             a.close()
             print("fd0:", "OK" if ok_a and ok_b else "FAILED", f"(A {'ok' if ok_a else 'broken'}, B {'ok' if ok_b else 'refused'})")
             sys.exit(0 if ok_a and ok_b else 1)
+        elif test == "small":
+            import random
+            random.seed(1)
+            c = Client()
+            size = c.open("/PS3ISO/t.iso")
+            t0 = time.monotonic()
+            for _ in range(500):
+                off = random.randrange(0, size - 1092)
+                assert len(c.read(off, 1092)) == 1092
+            dt = time.monotonic() - t0
+            print(f"small reads: 500 x 1092 bytes in {dt:.3f} s ({dt / 500 * 1000:.3f} ms each)")
+            c.close()
         elif test == "bench":
             big = os.path.abspath(sys.argv[4])
             link = os.path.join(d, "big.bin")

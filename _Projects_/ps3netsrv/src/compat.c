@@ -357,7 +357,13 @@ file_t open_file(const char *path, int oflag)
 	if(!path)
 		return INVALID_FD;
 
-	return open(path, oflag, 0666);
+	int fd = open(path, oflag, 0666);
+#ifdef POSIX_FADV_SEQUENTIAL
+	// fork (S3): game images are read front to back; a larger kernel read-ahead helps on slow disks
+	if((fd >= 0) && ((oflag & O_ACCMODE) == O_RDONLY))
+		posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+#endif
+	return fd;
 }
 
 int close_file(file_t fd)

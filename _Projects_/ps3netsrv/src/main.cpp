@@ -181,7 +181,7 @@ static int initialize_client(client_t *client)
 {
 	memset(client, 0, sizeof(client_t));
 
-	client->buf = (uint8_t *)malloc(BUFFER_SIZE);
+	client->buf = (uint8_t *)malloc(BUFFER_SIZE + 4); // fork (S4): + room for the READ_FILE result header
 	if(!client->buf)
 	{
 		printf("CRITICAL: Memory allocation error!\n");
@@ -782,7 +782,7 @@ static int process_read_cd_2048_critical_cmd(client_t *client, netiso_read_cd_20
 
 	DPRINTF("Read CD 2048 (%i) %x %x\n", client->CD_SECTOR_SIZE, BE32(cmd->start_sector), sector_count);
 
-	if((sector_count * 2048) > BUFFER_SIZE)
+	if(sector_count > BUFFER_SIZE / 2048) // fork (#8): sector_count * 2048 could overflow 32 bits
 	{
 		// This is just to save some uneeded code. PS3 will never request such a high number of sectors
 		printf("ERROR: Too many sectors read!\n");
@@ -836,7 +836,7 @@ static int process_read_file_cmd(client_t *client, netiso_read_file_cmd *cmd)
 		goto send_result_read_file;
 	}
 
-	bytes_read = client->ro_file->read(client->buf, read_size);
+	bytes_read = client->ro_file->read(client->buf + sizeof(result), read_size);
 	if(bytes_read < 0)
 	{
 		bytes_read = NONE;
@@ -844,15 +844,22 @@ static int process_read_file_cmd(client_t *client, netiso_read_file_cmd *cmd)
 
 send_result_read_file:
 
+	// fork (S4): the 4-byte result and the data go out in one send (two sends interact badly with delayed ACKs)
 	result.bytes_read = (int32_t)BE32(bytes_read);
 
-	if(send(client->s, (char *)&result, sizeof(result), 0) != 4)
+	if(!client->buf)
 	{
-		printf("ERROR: send failed on send result (read file)\n");
-		return FAILED;
+		if(send(client->s, (char *)&result, sizeof(result), 0) != 4)
+		{
+			printf("ERROR: send failed on send result (read file)\n");
+			return FAILED;
+		}
+		return SUCCEEDED;
 	}
 
-	if((bytes_read > 0) && (send(client->s, (char *)client->buf, bytes_read, 0) != bytes_read))
+	memcpy(client->buf, &result, sizeof(result));
+	int total = sizeof(result) + ((bytes_read > 0) ? bytes_read : 0);
+	if(send(client->s, (char *)client->buf, total, 0) != total)
 	{
 		printf("ERROR: send failed on read file!\n");
 		return FAILED;
@@ -2209,6 +2216,10 @@ int main(int argc, char *argv[])
 			printf("Network error: %d\n", get_network_error());
 			break;
 		}
+
+		// fork (S4): request/response protocol, small answers must not wait for Nagle
+		int nodelay = 1;
+		setsockopt(cs, IPPROTO_TCP, TCP_NODELAY, (const char *)&nodelay, sizeof(nodelay));
 
 		// Check for same client
 		for (i = 0; i < MAX_CLIENTS; i++)

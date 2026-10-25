@@ -468,6 +468,8 @@ VIsoFile::VIsoFile(bool ps3Mode)
 
 	fd = INVALID_FD;
 	lastPath = NULL;
+	lastDir = NULL;
+	lastFile = NULL;
 }
 
 VIsoFile::~VIsoFile()
@@ -567,6 +569,8 @@ void VIsoFile::fd_reset(void)
 
 	fd = INVALID_FD;
 	lastPath = NULL;
+	lastDir = NULL;  // the lists may be about to be freed (reset)
+	lastFile = NULL;
 }
 
 DirList *VIsoFile::getParent(DirList *dirList)
@@ -1652,9 +1656,25 @@ ssize_t VIsoFile::read(void *buf, size_t nbyte)
 	{
 		// Read from file(s)
 		dirList = rootList;
+
+		// fork (S5): start from the file of the previous read when it still covers vFilePtr, instead of walking
+		// all files on every read. Files occupy disjoint ranges, so the files listed before it can never match.
+		FileList *startFile = NULL;
+		if (lastDir && lastFile)
+		{
+			off64_t lStart = (uint64_t)fsBufSize + (uint64_t)lastFile->rlba * SECTOR_SIZE;
+			off64_t lEndSector = ((lStart + lastFile->size + SECTOR_MASK) & ~SECTOR_MASK);
+			if ((vFilePtr >= lStart) && (vFilePtr < lEndSector))
+			{
+				dirList = lastDir;
+				startFile = lastFile;
+			}
+		}
+
 		while (dirList)
 		{
-			FileList *fileList = dirList->fileList;
+			FileList *fileList = startFile ? startFile : dirList->fileList;
+			startFile = NULL;
 
 			while (fileList)
 			{
@@ -1669,6 +1689,8 @@ ssize_t VIsoFile::read(void *buf, size_t nbyte)
 						fprintf(stderr, "Sorry no support for 666 files. I have the feeling that your game is about to crash ^_^\n");
 						return r;
 					}
+
+					lastDir = dirList, lastFile = fileList; // fork (S5)
 
 					if (vFilePtr < fEnd)
 					{

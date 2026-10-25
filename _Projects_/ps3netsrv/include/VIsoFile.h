@@ -95,6 +95,8 @@ private:
 	file_stat_t st;
 
 	char *lastPath;
+	DirList *lastDir;   // fork (S5): file of the previous read, where the next lookup starts
+	FileList *lastFile;
 
 	void reset(void);
 	void fd_reset(void);
