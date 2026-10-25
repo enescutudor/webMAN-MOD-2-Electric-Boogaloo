@@ -474,6 +474,7 @@ static u8 mount_unk = EMU_OFF;
 #include "include/ps3mapi/artemis.h"
 
 #include "include/scan/snd0.h"
+#include "include/fork/net_guard.h"
 #include "include/scan/games_html.h"
 #include "include/scan/games_xml.h"
 #include "include/scan/prepntfs.h"

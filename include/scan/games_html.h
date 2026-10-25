@@ -764,6 +764,7 @@ list_games:
 				#ifdef USE_INTERNAL_NET_PLUGIN
 				if(is_net && (netiso_svrid == (f0-NET)) && (g_socket != NONE)) ns = g_socket; /* reuse current server connection */ else
 				#endif
+				if(is_net && (ns<0) && is_game_running_from_server(f0-NET)) break; // fork (7c.3a): do not open a 2nd connection to the server of the running game
 				if(is_net && (ns<0)) ns = connect_to_remote_server(f0-NET);
 				#endif
 				if(is_net && (ns<0)) break;
