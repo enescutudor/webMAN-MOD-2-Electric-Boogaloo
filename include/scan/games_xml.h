@@ -1097,7 +1097,7 @@ scan_roms:
 						if(BETWEEN(id_PS3ISO, f1, id_ISO) || scanning_roms)
 						{
 							snprintf(subpath, STD_PATH_LEN, "%s/%s", param, entry.entry_name.d_name); cellFsClosedir(fd2);
-							if(cellFsOpendir(subpath, &fd2) == CELL_FS_SUCCEEDED)
+							if(!IS_REGULAR_FILE(entry) && cellFsOpendir(subpath, &fd2) == CELL_FS_SUCCEEDED) // fork (S14): a file is not a subfolder
 							{
 								strcpy(subpath, entry.entry_name.d_name); subfolder = 1;
 		next_xml_entry:

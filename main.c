@@ -433,6 +433,7 @@ static u8 mount_unk = EMU_OFF;
 #ifdef COBRA_ONLY
 #include "include/mount/cue_file.h"
 #include "include/mount/psxemu.h"
+#include "include/fork/tcp_nodelay.h"
 #include "include/mount/netclient.h"
 #include "include/mount/netserver.h"
 #include "include/mount/rawseciso.h"
@@ -475,8 +476,12 @@ static u8 mount_unk = EMU_OFF;
 
 #include "include/scan/snd0.h"
 #include "include/fork/net_guard.h"
+#include "include/fork/scan_fast.h"
 #include "include/scan/games_html.h"
 #include "include/scan/games_xml.h"
+#ifdef USE_NTFS
+#include "include/fork/ntfs_cache.h"
+#endif
 #include "include/scan/prepntfs.h"
 
 #include "include/setup.h"

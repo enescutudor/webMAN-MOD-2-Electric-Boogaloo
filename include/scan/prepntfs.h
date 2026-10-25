@@ -294,10 +294,7 @@ static int prepNTFS(u8 clear)
 	char path[STD_PATH_LEN];
 
 	// remove ntfs files from WMTMP
-	#define NUM_CACHE_EXTS    4
-	const char *cache_ext[NUM_CACHE_EXTS] = { ".ntfs[PS3ISO]", ".ntfs[PSXISO]", ".ntfs[DVDISO]", ".ntfs[BDISO]" };
-	for(u8 n = 0; n < NUM_CACHE_EXTS; n++)
-		scan(WMTMP, false, cache_ext[n], SCAN_DELETE, NULL);
+	delete_ntfs_cache_files(); // fork (S14, G6): one pass instead of 4 scan() calls
 
 	sys_addr_t sysmem = NULL;
 

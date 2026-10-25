@@ -338,6 +338,7 @@ static int connect_to_remote_server(u8 server_id)
 		}
 	}
 
+	if(ns >= 0) set_tcp_nodelay(ns); // fork (S14, N5)
 	return ns;
 }
 
