@@ -31,6 +31,7 @@
 		}
 
 		buf.st_size = bufn.st_size;
+		buf.st_mtime = bufn.st_mtime;
 		buf.st_mode = bufn.st_mode;
 
 		if(wildcard || (bufn.st_mode & S_IFDIR)) is_binary = FOLDER_LISTING;
@@ -80,7 +81,7 @@
 
 	if(is_binary && !wildcard)
 	{
-		c_len = buf.st_size;
+		c_len = buf.st_size, c_mtime = buf.st_mtime;
 		if(buf.st_mode & S_IFDIR) is_binary = FOLDER_LISTING; // folder listing
 	}
 	#ifdef COPY_PS3

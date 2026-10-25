@@ -695,7 +695,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					slen = slaunch.path_pos - 1;
 					do
 					{
-						flen = sprintf(new_entry->data, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s",
+						flen = sprintf(new_entry->data, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s loading=\"lazy\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s",
 														param, idx, icon, onerror_prefix, (*onerror_prefix && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, title);
 
 						slen -= 4; if(slen < 32) break;
@@ -852,7 +852,7 @@ list_games:
 											*icon ? icon : wm_icons[default_icon], w, h, title, neth, param, enc_dir_name);
 						}
 						else
-							flen = sprintf(new_entry->data, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+							flen = sprintf(new_entry->data, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s loading=\"lazy\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
 											neth, param, enc_dir_name, idx,
 											icon, onerror_prefix, (*onerror_prefix  && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
 											neth, param, enc_dir_name, title);
@@ -979,7 +979,7 @@ next_html_entry:
 								slen = strlen(title);
 								do
 								{
-									flen = sprintf(new_entry->data, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+									flen = sprintf(new_entry->data, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s loading=\"lazy\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
 													param, "", enc_dir_name, idx, icon, onerror_prefix, (*onerror_prefix && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, title);
 
 									slen -= 4; if(slen < 32) break;

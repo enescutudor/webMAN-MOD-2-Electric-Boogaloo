@@ -1,10 +1,10 @@
-// Teste pe PC pentru funcțiile pure din webMAN. Funcțiile vin din sursa reală (gen/webman.inc, vezi Makefile).
-// Testele atk_* reproduc probleme din ANALIZA-webMAN-MOD.md; cele încă nereparate sunt în known-bugs.txt.
+// PC tests for the pure functions in webMAN. The functions come from the real sources (gen/webman.inc, see Makefile).
+// The atk_* tests reproduce issues from ANALIZA-webMAN-MOD.md; those not fixed yet are listed in known-bugs.txt.
 #include "shim.h"
 #include "gen/webman.inc"
 #include "test.h"
 
-// Copie pe heap de exact `size` octeți, ca ASan să prindă orice scriere sau citire în afara ei.
+// Heap copy of exactly `size` bytes, so ASan catches any write or read outside it.
 static char *exact(size_t size) { return calloc(1, size); }
 
 // ---------- ssplit (ftp.h) ----------
@@ -33,8 +33,8 @@ TEST(ssplit_truncates)
 	CHECK_STR(param, "rest-of");
 }
 
-// #12: FTP declară param[STD_PATH_LEN] și apelează ssplit(..., param, STD_PATH_LEN) (ftp.h:246, :292),
-// înainte de autentificare. NUL-ul final ajunge la param[STD_PATH_LEN], un octet după buffer.
+// #12: FTP declares param[STD_PATH_LEN] and calls ssplit(..., param, STD_PATH_LEN) (ftp.h:246, :292),
+// before authentication. The final NUL lands at param[STD_PATH_LEN], one byte past the buffer.
 TEST(atk_ftp_ssplit_off_by_one)
 {
 	char buf[300] = "USER ", cmd[16];
@@ -86,7 +86,7 @@ TEST(htmlenc_ascii_and_high)
 	CHECK_STR(dst, "Abc &#xE9;");
 }
 
-// #7: fiecare octet „high” devine 6 octeți, iar limita MAX_LINE_LEN se aplică abia după scriere.
+// #7: every "high" byte becomes 6 bytes, and the MAX_LINE_LEN limit is applied only after writing.
 TEST(atk_htmlenc_overflow)
 {
 	char *src = exact(4096);
@@ -97,7 +97,7 @@ TEST(atk_htmlenc_overflow)
 	free(dst); free(src);
 }
 
-// Raport, secțiunea 4 (html.h:208): &, <, >, " trec neescapate și strică XML-ul XMB.
+// Report, section 4 (html.h:208): &, <, >, " pass unescaped and break the XMB XML.
 TEST(atk_htmlenc_xml_special)
 {
 	char src[32] = "Tom & \"Jerry\" <1>", dst[128];
@@ -119,7 +119,7 @@ TEST(get_line_basic)
 	CHECK(get_line(line, cue, sizeof(cue) - 1, lp) == NONE);
 }
 
-// #9: mount.h:1303 trimite _path[STD_PATH_LEN] ca destinație, dar get_line scrie până la MAX_LINE_LEN + 1.
+// #9: mount.h:1303 passes _path[STD_PATH_LEN] as the destination, but get_line writes up to MAX_LINE_LEN + 1.
 TEST(atk_cue_long_line)
 {
 	char cue[512];
@@ -140,7 +140,7 @@ TEST(abspath_relative)
 	CHECK_STR(out, "/dev_hdd0/tmp");
 }
 
-// Raport, secțiunea 4 (ftp.h:64): strcat(cwd + path) fără limită; ambele pot avea până la STD_PATH_LEN - 1 caractere.
+// Report, section 4 (ftp.h:64): unbounded strcat(cwd + path); both can have up to STD_PATH_LEN - 1 characters.
 TEST(atk_abspath_overflow)
 {
 	char cwd[STD_PATH_LEN], path[STD_PATH_LEN];
@@ -149,4 +149,85 @@ TEST(atk_abspath_overflow)
 	char *out = exact(STD_PATH_LEN);
 	absPath(out, path, cwd);
 	free(out);
+}
+
+// ---------- line_value (fork/http_cache.h) ----------
+
+static const char REQUEST[] =
+	"GET /dev_hdd0/xmlhost/game_plugin/sman.css HTTP/1.1\r\n"
+	"Host: 192.168.0.4\r\n"
+	"if-none-match: \"5f1a2b3c-25c3\"\r\n"
+	"Origin: http://example.lan\r\n"
+	"\r\n";
+
+TEST(line_value_request_headers)
+{
+	char v[48];
+	CHECK(line_value(REQUEST, "If-None-Match", ':', v, sizeof(v)));
+	CHECK_STR(v, "\"5f1a2b3c-25c3\"");
+	CHECK(line_value(REQUEST, "Origin", ':', v, sizeof(v)));
+	CHECK_STR(v, "http://example.lan");
+}
+
+TEST(line_value_missing_or_partial_name)
+{
+	char v[48] = "old";
+	CHECK(!line_value(REQUEST, "Referer", ':', v, sizeof(v)));
+	CHECK_STR(v, "");
+	CHECK(!line_value(REQUEST, "Hos", ':', v, sizeof(v)));     // a prefix of "Host" is not "Host"
+	CHECK(!line_value(REQUEST, "GET /dev_hdd0", ':', v, sizeof(v)));
+}
+
+// A value that does not fit is ignored, not truncated: a truncated ETag must never match.
+TEST(line_value_too_long_ignored)
+{
+	char v[8] = "old";
+	CHECK(!line_value(REQUEST, "If-None-Match", ':', v, sizeof(v)));
+	CHECK_STR(v, "");
+}
+
+TEST(line_value_config)
+{
+	char v[64];
+	CHECK(line_value("# wmfork\ncors=http://dash.lan\r\nother=1\n", "cors", '=', v, sizeof(v)));
+	CHECK_STR(v, "http://dash.lan");
+}
+
+// A request that fills the whole receive buffer, without any CR/LF (www_client.h receives at most HTML_RECV_LAST bytes).
+TEST(line_value_full_buffer)
+{
+	char *req = exact(2048);
+	memset(req, 'A', 2047);
+	char v[64];
+	CHECK(!line_value(req, "Origin", ':', v, sizeof(v)));
+	free(req);
+}
+
+// ---------- http_etag / http_status_304 / http_cache_control (fork/http_cache.h) ----------
+
+TEST(http_etag_format)
+{
+	char etag[40];
+	CHECK(http_etag(etag, 0x5f1a2b3c, 9667) > 0);
+	CHECK_STR(etag, "\"5f1a2b3c-25c3\"");
+	CHECK(http_etag(etag, 0, 9667) == 0);   // no mtime: no caching
+	CHECK_STR(etag, "");
+}
+
+TEST(http_status_304_keeps_headers)
+{
+	char h[256] = "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nETag: \"1-2\"\r\n";
+	size_t len = http_status_304(h, strlen(h));
+	CHECK_STR(h, "HTTP/1.1 304 Not Modified\r\nContent-Type: text/css\r\nETag: \"1-2\"\r\n");
+	CHECK(len == strlen(h));
+}
+
+TEST(http_cache_control_paths)
+{
+	CHECK_STR(http_cache_control("/dev_hdd0/xmlhost/game_plugin/jquery.min.js"), "max-age=86400");
+	CHECK_STR(http_cache_control("/dev_hdd0/xmlhost/game_plugin/sman.css"), "max-age=86400");
+	CHECK_STR(http_cache_control("/dev_hdd0/xmlhost/game_plugin/games.html"), "no-cache");   // the game list changes
+	CHECK_STR(http_cache_control("/dev_hdd0/xmlhost/game_plugin/mygames.xml"), "no-cache");
+	CHECK_STR(http_cache_control("/dev_hdd0/game/BLES80608/USRDIR/covers/BCES01007.JPG"), "no-cache");
+	CHECK_STR(http_cache_control("/dev_usb000/x/jquery.min.js"), "no-cache");
 }

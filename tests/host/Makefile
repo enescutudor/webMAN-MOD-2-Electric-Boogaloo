@@ -1,18 +1,19 @@
-# Harness pe PC (gcc + ASan/UBSan) pentru funcțiile pure din webMAN.
+# PC harness (gcc + ASan/UBSan) for the pure functions in webMAN.
 #   make -C tests/host test
 SRC := ../..
 CFLAGS := -std=gnu99 -g -O1 -Wall -Wno-unused-function -fno-omit-frame-pointer \
 	-fsanitize=address,undefined -fno-sanitize=alignment -fno-sanitize-recover=undefined
-# alignment: memcpy64 copiază prin u64* nealiniat, ceea ce pe PPU e permis
+# alignment: memcpy64 copies through unaligned u64*, which the PPU allows
 
 EXTRACT := \
-	include/init/compare.h:islike \
+	include/init/compare.h:IS,_IS,islike \
 	include/init/string.h:strcopy,strncopy,memcpy64 \
 	include/init/eval.h:get_value,get_param \
 	include/init/html.h:htmlenc \
-	include/file/file.h:normalized_len,normalize_path \
+	include/file/file.h:get_ext,normalized_len,normalize_path \
 	include/ftp.h:parsePath,absPath,ssplit \
-	include/mount/cue_file.h:get_line
+	include/mount/cue_file.h:get_line \
+	include/fork/http_cache.h:line_value,http_etag,http_status_304,http_cache_control
 
 .PHONY: test clean
 test: t

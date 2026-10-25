@@ -490,6 +490,7 @@ static u8 mount_unk = EMU_OFF;
 #include "include/feat/pkg_handler.h"
 #include "include/poll/poll.h"
 
+#include "include/fork/http_cache.h"
 #include "include/www/www_client.h"
 #include "include/www/www_start.h"
 

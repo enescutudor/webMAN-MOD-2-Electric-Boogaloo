@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Verifică dacă fork-ul atinge zona roșie (PROTECTED_PATHS.txt) sau galbenă (tools/amber-paths.txt).
+# Checks whether the fork touches the red zone (PROTECTED_PATHS.txt) or the amber zone (tools/amber-paths.txt).
 #
-#   tools/check-protected.sh                  diff față de upstream (BASE, implicit upstream/master...HEAD)
-#   tools/check-protected.sh --staged         fișierele din index (hook-ul pre-commit)
-#   tools/check-protected.sh --msg <fișier>   cere „Impact low-level” în mesaj dacă indexul atinge zona galbenă (hook-ul commit-msg)
+#   tools/check-protected.sh                  diff against upstream (BASE, default upstream/master...HEAD)
+#   tools/check-protected.sh --staged         files in the index (pre-commit hook)
+#   tools/check-protected.sh --msg <file>     require "Impact low-level" in the message if the index touches the amber zone (commit-msg hook)
 #
-# Zona roșie: exit 1. Zona galbenă: doar avertisment (sau exit 1 la --msg, dacă lipsește secțiunea).
-# Merge-urile din upstream trec: aduc modificările lor neschimbate.
+# Red zone: exit 1. Amber zone: warning only (or exit 1 with --msg if the section is missing).
+# Merges from upstream pass: they bring upstream changes unmodified.
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
 red_list="$root/PROTECTED_PATHS.txt"
 amber_list="$root/tools/amber-paths.txt"
 
-# Afișează căile din stdin care se potrivesc cu o intrare din lista $1 (cale exactă sau prefix terminat în /).
+# Prints the paths from stdin that match an entry of list $1 (exact path, or prefix ending in /).
 match() {
 	local list=$1 path entry
 	while IFS= read -r path; do
@@ -35,8 +35,17 @@ fi
 case $mode in
 	diff)    files=$(git diff --name-only "${BASE:-upstream/master...HEAD}") ;;
 	--staged|--msg) files=$(git diff --cached --name-only) ;;
-	*) echo "folosire: $0 [--staged | --msg <fișier>]" >&2; exit 2 ;;
+	*) echo "usage: $0 [--staged | --msg <file>]" >&2; exit 2 ;;
 esac
+
+# 7b.4: the PS3MAPI_REENABLE_SYSCALL8 call in www_page.h stays unchanged, on the same line as upstream
+page=include/www/www_page.h
+syscall8() { LC_ALL=C grep -n 'PS3MAPI_REENABLE_SYSCALL8'; }
+if [[ $mode == diff ]]; then now=$(syscall8 < "$root/$page"); else now=$(git show ":$page" | syscall8); fi
+if [[ $now != "$(git show "$(git merge-base upstream/master HEAD):$page" | syscall8)" ]]; then
+	echo "ERROR: $page: the PS3MAPI_REENABLE_SYSCALL8 line differs from upstream (7b.4)" >&2
+	exit 1
+fi
 
 red=$(match "$red_list" <<< "$files")
 amber=$(match "$amber_list" <<< "$files")
@@ -44,7 +53,7 @@ amber=$(grep -vxF -f <(printf '%s\n' "$red") <<< "$amber" || true)
 
 if [[ $mode == --msg ]]; then
 	if [[ -n $amber ]] && ! grep -qi 'impact low-level' "$2"; then
-		echo "EROARE: commit-ul atinge zona galbenă și mesajul nu are secțiunea „Impact low-level”:" >&2
+		echo "ERROR: the commit touches the amber zone and the message has no \"Impact low-level\" section:" >&2
 		sed 's/^/  /' <<< "$amber" >&2
 		exit 1
 	fi
@@ -52,11 +61,11 @@ if [[ $mode == --msg ]]; then
 fi
 
 if [[ -n $amber ]]; then
-	echo "ATENȚIE: zona galbenă (cere „Impact low-level” în mesajul de commit):" >&2
+	echo "WARNING: amber zone (requires \"Impact low-level\" in the commit message):" >&2
 	sed 's/^/  /' <<< "$amber" >&2
 fi
 if [[ -n $red ]]; then
-	echo "EROARE: zona roșie, fișiere protejate (PROTECTED_PATHS.txt):" >&2
+	echo "ERROR: red zone, protected files (PROTECTED_PATHS.txt):" >&2
 	sed 's/^/  /' <<< "$red" >&2
 	exit 1
 fi

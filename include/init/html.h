@@ -422,11 +422,9 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 
 	bool set_base_path = false;
 
+	// fork: no "Access-Control-Allow-Origin: *" by default; CORS only for the origin set in wmfork.cfg (http_cors)
 	size_t slen = sprintf(buffer,	"HTTP/1.1 200 OK\r\n"
-									"%s"
-									"Content-Type: ",
-									webman_config->bind ? "" : // disallow CORS if bind (remote access to FTP/WWW services) is disabled
-									"Access-Control-Allow-Origin: *\r\n"); // default: allow CORS (Cross-Origin Resource Sharing)
+									"Content-Type: ");
 
 	t_string *header, mimetype; _set(&mimetype, buffer, slen); header = &mimetype;
 
@@ -444,7 +442,7 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 		if(_IS(ext, ".htm") || _IS(ext, ".html") || _IS(ext, ".shtm"))
 			{_concat2(&mimetype, "text/", "html;charset=UTF-8"); set_base_path = true;}
 		else
-		if(_IS(ext + 1, ".js"))
+		if(_IS(ext, ".js"))
 			_concat2(&mimetype, "text/", "javascript");
 		else
 		if(_IS(ext, ".css"))

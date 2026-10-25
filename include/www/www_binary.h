@@ -1,5 +1,29 @@
 	if(is_binary == BINARY_FILE) // binary file
 	{
+		// fork (W1): ETag + Cache-Control; 304 without body if the browser already has this version
+		char etag[40];
+		bool not_modified = http_etag(etag, c_mtime, c_len) && IS(if_none_match, etag);
+		if(*etag) header_len += sprintf(header + header_len, "ETag: %s\r\nCache-Control: %s\r\n", etag, http_cache_control(param));
+
+		size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
+
+		if(not_modified)
+			header_len = http_status_304(header, header_len);
+		else
+		{
+			// fork (W8): allocate before sending the headers, so a failed allocation gets a clean 503
+			u8 npages = c_len ? (u8)MIN(MAX_PAGES, 1 + ((c_len - 1) / _64KB_)) : 1;
+
+			for(u8 n = npages; n > 0; n--)
+				if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; if(IS_INGAME) sys_ppu_thread_usleep(5000); break;} // fork (6.3): upstream pause kept in-game only
+
+			if(!sysmem)
+			{
+				keep_alive = http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
+				goto exit_handleclient_www;
+			}
+		}
+
 		if(keep_alive)
 		{
 			header_len += sprintf(header + header_len,  "Keep-Alive: timeout=3,max=250\r\n"
@@ -9,18 +33,7 @@
 		header_len += sprintf(header + header_len, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len);
 		send(conn_s, header, header_len, 0);
 
-		size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
-
-		u8 npages = c_len ? (u8)MIN(MAX_PAGES, 1 + ((c_len - 1) / _64KB_)) : 1;
-
-		for(u8 n = npages; n > 0; n--)
-			if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; sys_ppu_thread_usleep(5000); break;}
-
-		if(!sysmem)
-		{
-			keep_alive = http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
-			goto exit_handleclient_www;
-		}
+		if(not_modified) goto exit_handleclient_www;
 
 		if(islike(param, "/dev_bdvd"))
 			sysLv2FsBdDecrypt(); // decrypt dev_bdvd files

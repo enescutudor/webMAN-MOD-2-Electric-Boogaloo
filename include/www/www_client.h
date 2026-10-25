@@ -399,7 +399,8 @@ parse_request:
   {
 	u8 retry, served, is_binary;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	s8 sort_order, sort_by;
-	u64 c_len;
+	u64 c_len, c_mtime;
+	char if_none_match[48], origin[64]; // fork: request headers kept before the request is cut at the first line
 
 	u8 is_cpursx;
 	u8 is_popup, auto_mount;
@@ -410,7 +411,7 @@ parse_request:
 	#endif
 
 	retry = served = 0; is_binary = WEB_COMMAND;
-	is_ps3_http  = auto_mount = is_popup = is_cpursx = 0; c_len = 0;
+	is_ps3_http  = auto_mount = is_popup = is_cpursx = 0; c_len = c_mtime = 0; *if_none_match = *origin = '\0';
 	sort_order = 1, sort_by = 0;
 
 //// process commands ////
@@ -516,7 +517,7 @@ parse_request:
 
 		mc = NULL;
 
-		if((*header == 'G') || ((recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && (*header == 'G') && (header[4] == '/'))) // serve only GET /xxx requests
+		if((*header == 'G') || ((recv(conn_s, header, HTML_RECV_LAST, 0) > 0) && (*header == 'G') && (header[4] == '/'))) // serve only GET /xxx requests
 		{
 			if(strstr(header, "Connection: keep-alive"))
 			{
@@ -526,6 +527,9 @@ parse_request:
 			if(strstr(header, "x-ps3-browser")) is_ps3_http = 1; else
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
+
+			line_value(header, "If-None-Match", ':', if_none_match, sizeof(if_none_match));
+			line_value(header, "Origin", ':', origin, sizeof(origin));
 
 			for(size_t n = 0; header[n]; n++) {if(header[n] == '\r' || header[n] == '\n' || n >= HTML_RECV_SIZE) {header[n] = 0; break;}}
 
@@ -637,6 +641,7 @@ parse_request:
 
  html_response:
 			header_len = prepare_header(header, param, is_binary);
+			header_len += http_cors(header + header_len, origin);
 
 			#include "www_binary.h"
 
