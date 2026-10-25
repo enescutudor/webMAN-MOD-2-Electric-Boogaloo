@@ -856,6 +856,8 @@ static bool game_mount(char *buffer, char *html, char *param, char *tempstr, boo
 		#ifdef COPY_PS3
 		if(sys_admin && is_copy)
 		{
+			int64_t copy_ret = FAILED; // fork (S15): a move deletes the source only after a successful copy
+
 			if(islike(target, source))
 				{sprintf(html, "<hr>%s %s %s", STR_ERROR, STR_CPYDEST, source); strcat(buffer, html);}
 			else if((!islike(source, "/net")) && not_exists(source))
@@ -883,6 +885,7 @@ static bool game_mount(char *buffer, char *html, char *param, char *tempstr, boo
 				mkdir_tree(target);
 
 				bool recursive = true;
+				copy_ret = CELL_OK;
 				if(IS(source, INT_HDD_ROOT_PATH)) recursive = (strchr(source + 10, '/') != NULL); // prevent recursive copy from root of HDD
 
 				// copy folder to target
@@ -895,13 +898,15 @@ static bool game_mount(char *buffer, char *html, char *param, char *tempstr, boo
 				else if(fast_move)
 					{rename_file(source, target); cp_mode = CP_MODE_COPY;}
 				else if(isDir(source))
-					folder_copy(source, target);
+					copy_ret = folder_copy(source, target);
 				else
-					file_copy(source, target);
+					copy_ret = file_copy(source, target);
 
 				// show msg end
 				if(copy_aborted)
 					show_msg_with_icon(ICON_EXCLAMATION, STR_CPYABORT);
+				else if(copy_ret < CELL_OK)
+					show_msg_with_icon(ICON_EXCLAMATION, STR_ERROR); // fork (S15): no "finished" and no restart after a failed copy
 				else
 				{
 					if(!silent_mode)
@@ -916,7 +921,7 @@ static bool game_mount(char *buffer, char *html, char *param, char *tempstr, boo
 				setPluginInactive();
 			}
 
-			if(!copy_aborted && (cp_mode == CP_MODE_MOVE) && file_exists(target)) del(source, true);
+			if(!copy_aborted && (cp_mode == CP_MODE_MOVE) && (copy_ret >= CELL_OK) && file_exists(target)) del(source, true);
 			if(cp_mode) {cp_mode = CP_MODE_NONE, *cp_path = NULL;}
 		}
 		#endif //#ifdef COPY_PS3

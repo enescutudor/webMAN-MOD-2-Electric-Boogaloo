@@ -49,9 +49,9 @@ static u32 dir_count = 0;
 static u32 file_count = 0;
 static char *stitle_id = NULL;
 
-static size_t size_link(const char *source)
+static u64 size_link(const char *source) // fork (#19): was size_t (32 bits), files over 4 GB were counted modulo 4 GB
 {
-	size_t size = file_size(source);
+	u64 size = file_size(source);
 
 	if(!stitle_id) {file_count++; return size;}
 
@@ -151,6 +151,14 @@ static u64 folder_size(const char *path)
 			if(copy_aborted) break;
 
 			sprintf(psource, "/%s", entry_name); if(do_chmod) cellFsChmod(source, new_mode);
+
+			// fork (S15, F4): the entry already has type and size; /stat.ps3 used 2 stats per file
+			if(!is_ntfs && !stitle_id && !IS(path, "/") && ENTRY_TYPE_KNOWN(entry))
+			{
+				if(ENTRY_IS_DIR(entry)) {dir_count++; dir_size += folder_size(source);}
+				else {file_count++; dir_size += entry.attribute.st_size;}
+				continue;
+			}
 
 			if(isDir(source))
 			{

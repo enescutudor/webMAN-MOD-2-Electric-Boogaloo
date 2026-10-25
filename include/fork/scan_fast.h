@@ -4,3 +4,7 @@
 // (it fails on a file anyway). Entries of any other or unknown type are still probed.
 
 #define IS_REGULAR_FILE(entry)	(((entry).attribute.st_mode & CELL_FS_S_IFMT) == CELL_FS_S_IFREG)
+
+// Fork (S15, F4): type of a CellFsDirectoryEntry, when the file system filled it in (not for "/" or NTFS listings)
+#define ENTRY_TYPE_KNOWN(entry)	(((entry).attribute.st_mode & CELL_FS_S_IFMT) == CELL_FS_S_IFDIR || IS_REGULAR_FILE(entry))
+#define ENTRY_IS_DIR(entry)		(((entry).attribute.st_mode & CELL_FS_S_IFMT) == CELL_FS_S_IFDIR)

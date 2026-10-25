@@ -13,9 +13,13 @@ enum scan_operations
 	SCAN_LIST_JSON = 10
 };
 
+#include "../fork/list_file.h"
+
 static void rename_file(char *source, char *dest);
 
-static int scan(const char *path, u8 recursive, const char *wildcard, enum scan_operations fop, const char *dest)
+static int scan(const char *path, u8 recursive, const char *wildcard, enum scan_operations fop, const char *dest);
+
+static int scan_tree(const char *path, u8 recursive, const char *wildcard, enum scan_operations fop, const char *dest)
 {
 	// fop: 0 = scan to file, 1 = del, 2 = copy, 3 = force copy, 4 = move, 5 = rename/move in same fs, 6 = copy bak
 
@@ -64,6 +68,7 @@ static int scan(const char *path, u8 recursive, const char *wildcard, enum scan_
 	int counter = 0;
 	bool is_root, prescan = (fop == SCAN_DELETE) | (fop == SCAN_MOVE) | (fop == SCAN_RENAME);
 	bool is_json = (fop == SCAN_LIST_JSON);
+	bool is_list = (fop == SCAN_LIST) || (fop == SCAN_LIST_SIZE) || is_json;
 
 	#ifdef USE_NTFS
 	struct stat bufn;
@@ -118,12 +123,15 @@ rescan:
 
 			if(use_dest) strcopy(pdest, entry_name);
 
-			if(isDir(entry))
+			// fork (S15, F4): listings take type and size from the entry (delete, move, rename, truncate are unchanged)
+			bool from_entry = is_list && !is_ntfs && !is_root && ENTRY_TYPE_KNOWN(entry_d);
+
+			if(from_entry ? ENTRY_IS_DIR(entry_d) : isDir(entry))
 			{
 				if(is_json && (*dest == '/') && !wildcard)
 				{
 					sprintf(dest_entry, "\t{\"path\":\"%s\",\"size\":0},", entry);
-					save_file(dest, dest_entry, APPEND_TEXT);
+					list_file_line(dest, dest_entry);
 				}
 
 				if(recursive) scan(entry, recursive, wildcard, fop, dest);
@@ -141,17 +149,17 @@ rescan:
 				{
 					if(is_json)
 					{
-						sprintf(dest_entry, "\t{\"path\":\"%s\",\"size\":%llu},", entry, file_size(entry));
-						save_file(dest, dest_entry, APPEND_TEXT);
+						sprintf(dest_entry, "\t{\"path\":\"%s\",\"size\":%llu},", entry, from_entry ? entry_d.attribute.st_size : file_size(entry));
+						list_file_line(dest, dest_entry);
 						continue;
 					}
 					else
-						sprintf(entry_name, "\t%'llu", file_size(entry));
+						sprintf(entry_name, "\t%'llu", from_entry ? entry_d.attribute.st_size : file_size(entry));
 					
 					strcat(pentry, entry_name);
 				}
 
-				save_file(dest, entry, APPEND_TEXT);
+				list_file_line(dest, entry);
 			}
 			#ifdef UNLOCK_SAVEDATA
 			else if(fop == SCAN_UNLOCK_SAVE)
@@ -246,4 +254,14 @@ rescan:
 
 	disable_progress();
 	return CELL_FS_SUCCEEDED;
+}
+
+// fork (S15, F5): the outermost listing keeps its list file open (fork/list_file.h)
+static int scan(const char *path, u8 recursive, const char *wildcard, enum scan_operations fop, const char *dest)
+{
+	if(!list_file_begin(fop, dest)) return scan_tree(path, recursive, wildcard, fop, dest);
+
+	int ret = scan_tree(path, recursive, wildcard, fop, dest);
+	list_file_end(dest);
+	return ret;
 }

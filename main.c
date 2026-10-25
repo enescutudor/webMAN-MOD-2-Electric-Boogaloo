@@ -429,17 +429,19 @@ static u8 mount_unk = EMU_OFF;
 #include "include/init/buffer_size.h"
 #include "include/init/vsh.h"
 #include "include/mount/eject_insert.h"
+#include "include/fork/tcp_nodelay.h"
 
 #ifdef COBRA_ONLY
 #include "include/mount/cue_file.h"
 #include "include/mount/psxemu.h"
-#include "include/fork/tcp_nodelay.h"
 #include "include/mount/netclient.h"
 #include "include/mount/netserver.h"
 #include "include/mount/rawseciso.h"
 #include "include/mount/netiso.h"
 #endif
 
+#include "include/fork/sys_path.h"
+#include "include/fork/scan_fast.h"
 #include "include/file/file.h"
 #include "include/mount/ps2_disc.h"
 #include "include/mount/ps2_classic.h"
@@ -476,7 +478,6 @@ static u8 mount_unk = EMU_OFF;
 
 #include "include/scan/snd0.h"
 #include "include/fork/net_guard.h"
-#include "include/fork/scan_fast.h"
 #include "include/scan/games_html.h"
 #include "include/scan/games_xml.h"
 #ifdef USE_NTFS

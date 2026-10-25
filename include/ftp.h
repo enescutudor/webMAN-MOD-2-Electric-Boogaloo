@@ -271,6 +271,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 		tv.tv_sec = (webman_config->ftp_timeout * 60);
 	}
 	setsockopt(conn_s_ftp, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+	set_tcp_nodelay(conn_s_ftp); // fork (S15): the "226" reply waited ~40 ms behind the unacknowledged "150"
 
 	sys_addr_t sysmem = NULL;
 

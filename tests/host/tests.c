@@ -323,3 +323,32 @@ TEST(list_longest_mlsd_line)
 	CHECK(len + 1 <= LIST_LINE_SIZE);
 	CHECK(len + 1 > STD_PATH_LEN + 20);  // FTP_RECV_SIZE: the old buffer was too small
 }
+
+// ---------- is_system_path (fork/sys_path.h) ----------
+
+#ifndef ISDIGIT
+#define ISDIGIT(a) (('0' <= (a)) && ((a) <= '9'))
+#endif
+#include "../../include/fork/sys_path.h"
+
+TEST(system_path_truth_table)
+{
+	static const struct { const char *path; bool system; } t[] = {
+		{"/dev_hdd0", false}, {"/dev_hdd0/", false}, {"/dev_hdd0/tmp/x.bin", false},
+		{"/dev_usb000/a", false}, {"/dev_usb007", false}, {"/dev_ntfs0:/PS3ISO/a.iso", false}, {"/dev_ntfs1/x", false},
+		{"//dev_hdd0/x", false}, {"/./dev_hdd0/x", false}, {"dev_hdd0/x", false}, {"/dev_hdd0/a/./b", false},
+		{"/dev_hdd0/a..b/c", false}, {"/dev_hdd0/..x", false},
+		{"/dev_flash/vsh/module/x.sprx", true}, {"/dev_flash2/x", true}, {"/dev_flash3", true}, {"/dev_blind/x", true},
+		{"/dev_rewrite/x", true}, {"/dev_bdvd/x", true}, {"/dev_hdd1/x", true}, {"/app_home/x", true}, {"/", true},
+		{"", true}, {NULL, true},
+		{"/dev_hdd0/../dev_flash/x", true}, {"/dev_hdd0/..", true}, {"/dev_usb000/a/../../dev_blind", true},
+		{"/DEV_HDD0/x", true}, {"/dev_hdd0x/y", true}, {"/dev_usb00/x", true}, {"/dev_usbxxx/x", true},
+		{"/dev_ntfs/x", true}, {"/dev_hdd00/x", true},
+	};
+	for(size_t i = 0; i < sizeof(t) / sizeof(t[0]); i++)
+		if(is_system_path(t[i].path) != t[i].system)
+		{
+			printf("    is_system_path(\"%s\") should be %d\n", t[i].path ? t[i].path : "(null)", t[i].system);
+			CHECK(0);
+		}
+}

@@ -1,8 +1,8 @@
-// Fork (S14, N5): no Nagle delay on the requests to ps3netsrv.
-//
-// netclient sends a command and its path with two send() calls. With Nagle on, the path waits until the server
-// ACKs the command, and the server delays that ACK (~40 ms) because it is still waiting for the path. Measured on
-// a game list scan: 42 ms per stat or open_dir before, ~1 ms after. The bytes on the wire are the same.
+// Fork: no Nagle delay where two small writes follow each other without an answer in between. With Nagle on,
+// the second write waits until the peer ACKs the first one, and the peer delays that ACK (~40 ms). The bytes on
+// the wire are the same.
+// - S14, N5: requests to ps3netsrv (command, then path): 42 ms -> ~1 ms per stat or open_dir in a game list scan.
+// - S15: FTP control connection ("150", then "226" after the transfer): 53 ms -> ~11 ms per small file.
 
 #include <netinet/tcp.h>
 

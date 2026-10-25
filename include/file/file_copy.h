@@ -224,6 +224,11 @@ int64_t file_copy(const char *file1, char *file2)
 		if(!sysmem) {chunk_size = _64KB_; sysmem = sys_mem_allocate(chunk_size);} // fork (F0): keep the fallback buffer
 	}
 
+	// fork (S15): a failed read or write is an error, not a shorter copy; system destinations keep the upstream behavior
+	const bool check_io = !is_system_path(file2);
+	bool io_error = false;
+	const u32 chunk_max = chunk_size; // fork (S15, F8)
+
 	if(sysmem)
 	{
 		++copy_in_progress;
@@ -262,25 +267,27 @@ next_part:
 					{
 						ps3ntfs_seek64(fd1, pos, SEEK_SET);
 						read = ps3ntfs_read(fd1, (void *)chunk, chunk_size);
+						if(check_io && ((s64)(int)read <= 0)) read = 0; // fork (S15): negative = error
 					}
 					else
 					#endif
 					{
-						cellFsReadWithOffset(fd1, pos, chunk, chunk_size, &read);
+						if((cellFsReadWithOffset(fd1, pos, chunk, chunk_size, &read) != CELL_FS_SUCCEEDED) && check_io) read = 0;
 					}
 
-					if(!read) break;
+					if(!read) {io_error = check_io; break;}
 
 					#ifdef USE_NTFS
 					if(is_ntfs2)
 					{
 						written = ps3ntfs_write(fd2, chunk, read);
+						if(check_io && ((s64)(int)written <= 0)) written = 0; // fork (S15): negative = error
 					}
 					else
 					#endif
-					cellFsWrite(fd2, chunk, read, &written);
+					if((cellFsWrite(fd2, chunk, read, &written) != CELL_FS_SUCCEEDED) && check_io) written = 0;
 
-					if(!written) break;
+					if(!written) {io_error = check_io; break;}
 
 					pos  += written;
 					size -= written;
@@ -295,7 +302,7 @@ next_part:
 
 				copied_size += pos;
 
-				if(check_666 && !copy_aborted && (merge_part < 99))
+				if(check_666 && !copy_aborted && !io_error && (merge_part < 99))
 				{
 					sprintf(file1_666, ".666%02i", ++merge_part);
 
@@ -303,6 +310,7 @@ next_part:
 					if(current_size)
 					{
 						cellFsClose(fd1);
+						chunk_size = chunk_max; // fork (F8): the last chunk of the previous part may have shrunk it
 						goto merge_next;
 					}
 				}
@@ -313,7 +321,7 @@ next_part:
 				#endif
 				cellFsClose(fd2);
 
-				if(copy_aborted)
+				if(copy_aborted || io_error)
 				{
 					#ifdef USE_NTFS
 					if(is_ntfs2) ps3ntfs_unlink(ntfs_path(file2));
@@ -334,7 +342,7 @@ next_part:
 				else
 					{cellFsChmod(file2, MODE); copied_count++;}
 
-				ret = size;
+				ret = io_error ? (int64_t)FAILED : (int64_t)size;
 			}
 
 			#ifdef USE_NTFS
@@ -391,6 +399,7 @@ static int recursive_folder_copy(const char *path1, char *path2)
 	}
 
 	bool is_root = IS(path1, "/");
+	int ret = CELL_FS_SUCCEEDED; // fork (S15): FAILED if any file or subfolder failed
 
 	if(is_ntfs || cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
@@ -430,13 +439,13 @@ static int recursive_folder_copy(const char *path1, char *path2)
 			sprintf(source + plen1, "/%s", entry_name);
 			sprintf(target + plen2, "/%s", entry_name);
 
-			if(isDir(source))
+			if((!is_ntfs && !is_root && ENTRY_TYPE_KNOWN(entry)) ? ENTRY_IS_DIR(entry) : isDir(source)) // fork (S15, F4)
 			{
 				if(IS(source, "/dev_bdvd/PS3_UPDATE")) {cellFsMkdir(target, DMODE); continue;} // just create /PS3_UPDATE without its content
-				recursive_folder_copy(source, target);
+				if(recursive_folder_copy(source, target) < CELL_FS_SUCCEEDED) ret = FAILED;
 			}
 			else
-				file_copy(source, target);
+				if(file_copy(source, target) < CELL_FS_SUCCEEDED) ret = FAILED;
 		}
 
 		#ifdef USE_NTFS
@@ -447,7 +456,7 @@ static int recursive_folder_copy(const char *path1, char *path2)
 
 		if(copy_aborted) return FAILED;
 	}
-	return CELL_FS_SUCCEEDED;
+	return ret;
 }
 
 static int folder_copy(const char *path1, char *path2)
