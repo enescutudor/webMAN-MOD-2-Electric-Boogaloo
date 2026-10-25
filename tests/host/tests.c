@@ -47,12 +47,15 @@ TEST(ssplit_truncates)
 
 // #12: FTP declares param[STD_PATH_LEN] and calls ssplit(..., param, STD_PATH_LEN) (ftp.h:246, :292),
 // before authentication. The final NUL lands at param[STD_PATH_LEN], one byte past the buffer.
+// #12: FTP split a long line into param[STD_PATH_LEN] with rmaxlen = STD_PATH_LEN, so the NUL landed at
+// param[STD_PATH_LEN], one past the buffer. The fix passes STD_PATH_LEN - 1 (rmaxlen is a max char count).
 TEST(atk_ftp_ssplit_off_by_one)
 {
 	char buf[300] = "USER ", cmd[16];
 	memset(buf + 5, 'A', 270);
 	char *param = exact(STD_PATH_LEN);
-	ssplit(buf, cmd, 15, param, STD_PATH_LEN);
+	ssplit(buf, cmd, 15, param, STD_PATH_LEN - 1); // as the fixed FTP caller now does
+	CHECK(param[STD_PATH_LEN - 1] == '\0');        // last byte still the terminator, no overflow
 	free(param);
 }
 
@@ -124,11 +127,11 @@ TEST(get_line_basic)
 {
 	const char cue[] = "FILE \"a.bin\" BINARY\r\n  TRACK 01 MODE2/2352\n";
 	char line[MAX_LINE_LEN + 1];
-	int lp = get_line(line, cue, sizeof(cue) - 1, 0);
+	int lp = get_line(line, sizeof(line), cue, sizeof(cue) - 1, 0);
 	CHECK_STR(line, "FILE \"a.bin\" BINARY");
-	lp = get_line(line, cue, sizeof(cue) - 1, lp);
+	lp = get_line(line, sizeof(line), cue, sizeof(cue) - 1, lp);
 	CHECK_STR(line, "  TRACK 01 MODE2/2352");
-	CHECK(get_line(line, cue, sizeof(cue) - 1, lp) == NONE);
+	CHECK(get_line(line, sizeof(line), cue, sizeof(cue) - 1, lp) == NONE);
 }
 
 // #9: mount.h:1303 passes _path[STD_PATH_LEN] as the destination, but get_line writes up to MAX_LINE_LEN + 1.
@@ -137,7 +140,7 @@ TEST(atk_cue_long_line)
 	char cue[512];
 	memset(cue, 'A', 400); strcpy(cue + 400, "\n");
 	char *path = exact(STD_PATH_LEN);
-	get_line(path, cue, strlen(cue), 0);
+	get_line(path, STD_PATH_LEN, cue, strlen(cue), 0);
 	free(path);
 }
 
@@ -351,4 +354,49 @@ TEST(system_path_truth_table)
 			printf("    is_system_path(\"%s\") should be %d\n", t[i].path ? t[i].path : "(null)", t[i].system);
 			CHECK(0);
 		}
+}
+
+// ---------- htmlenc bound (#7, html.h) ----------
+
+// htmlenc expands every byte >= 0x7F or < 0x20 to "&#xNN;" (up to 6 bytes). The output must never pass MAX_LINE_LEN,
+// even for an all-high-byte name from a malicious netiso server, and dst must only need MAX_LINE_LEN + 1 bytes.
+TEST(htmlenc_bounds_long_high_bytes)
+{
+    char src[600];
+    memset(src, 0xE9, sizeof(src) - 1); src[sizeof(src) - 1] = '\0'; // 599 high bytes -> ~3594 expanded
+    char *dst = exact(MAX_LINE_LEN + 1); // ASan catches any write at or past MAX_LINE_LEN + 1
+    size_t n = htmlenc(dst, src, 0);
+    CHECK(n <= MAX_LINE_LEN);
+    CHECK(dst[n] == '\0');
+    free(dst);
+}
+
+TEST(htmlenc_plain_text_unchanged)
+{
+    char src[] = "Grand Theft Auto V";
+    char dst[64];
+    size_t n = htmlenc(dst, src, 0);
+    CHECK_STR(dst, "Grand Theft Auto V");
+    CHECK(n == strlen(src));
+}
+
+// ---------- get_line bound (#9, cue_file.h) ----------
+
+// A .cue line longer than the destination must be truncated to dst_size - 1, never overflow it.
+TEST(get_line_respects_dst_size)
+{
+    char cue[400]; memset(cue, 'A', sizeof(cue)); cue[sizeof(cue) - 1] = '\n';
+    char *dst = exact(64); // STD_PATH_LEN-like small buffer; ASan guards byte 64 onward
+    get_line(dst, 64, cue, (int)sizeof(cue), 0);
+    CHECK(strlen(dst) <= 63);
+    free(dst);
+}
+
+TEST(get_line_short_line_intact)
+{
+    const char *cue = "FILE \"game.bin\" BINARY\r\nTRACK 01 MODE2/2352\r\n";
+    char dst[128];
+    int next = get_line(dst, 128, cue, (int)strlen(cue), 0);
+    CHECK_STR(dst, "FILE \"game.bin\" BINARY");
+    CHECK(next > 0);
 }

@@ -55,7 +55,7 @@ static void parse_param_sfo(unsigned char *mem, char *title_id, char *title, u16
 		else
 		if(!memcmp(FIELD_NAME, "TITLE", 6))
 		{
-			memcpy64(title, (char *)mem + pos, 128);
+			memcpy64(title, (char *)mem + pos, 128); title[127] = 0; // fork (param_sfo): guarantee NUL in title[128]
 			#ifndef ENGLISH_ONLY
 			if(*TITLE_XX == NULL)
 			#endif
@@ -65,7 +65,7 @@ static void parse_param_sfo(unsigned char *mem, char *title_id, char *title, u16
 		else
 		if(!memcmp(FIELD_NAME, TITLE_XX, TITLE_ID_LEN))
 		{
-			memcpy64(title, (char *)mem + pos, 128);
+			memcpy64(title, (char *)mem + pos, 128); title[127] = 0; // fork (param_sfo): guarantee NUL in title[128]
 			if(*title_id) break;
 		}
 		#endif

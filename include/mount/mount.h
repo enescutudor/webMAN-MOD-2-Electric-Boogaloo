@@ -1305,7 +1305,7 @@ static bool mount_ps_disc_image(char *_path, char *cobra_iso_list[], u8 iso_part
 			if(cue_size > 16)
 			{
 				TrackDef tracks[MAX_TRACKS];
-				unsigned int num_tracks = parse_cue(_path, cue_buf, cue_size, tracks);
+				unsigned int num_tracks = parse_cue(_path, STD_PATH_LEN, cue_buf, cue_size, tracks); // fork (#9): bound to _path size
 
 				if(emu_type == EMU_PSX)
 					cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);

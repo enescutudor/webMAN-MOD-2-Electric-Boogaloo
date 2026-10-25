@@ -63,6 +63,12 @@ static int read_remote_file(int s, void *buf, u64 offset, u32 size, int *abort_c
 	if(bytes_read <= 0)
 		return bytes_read;
 
+	if((u32)bytes_read > size) // fork (#6): a malicious server could return more than requested, overflowing buf
+	{
+		*abort_connection = 1;
+		return FAILED;
+	}
+
 	if(recv(s, buf, bytes_read, MSG_WAITALL) != bytes_read)
 	{
 		//DPRINTF("recv failed (read_remote_file) (errno=%d)!\n", get_network_error());

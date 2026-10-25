@@ -110,7 +110,7 @@ static void create_ntfs_file(char *iso_path, char *filename, size_t plen)
 				char *cue_buf = (char*)sysmem_p;
 				int cue_size = read_file(cue_file, cue_buf, _8KB_, 0);
 
-				num_tracks = parse_cue(cue_file, cue_buf, cue_size, tracks);
+				num_tracks = parse_cue(cue_file, STD_PATH_LEN, cue_buf, cue_size, tracks); // fork (#9): cue_file is dir_entry[STD_PATH_LEN]
 			}
 		}
 

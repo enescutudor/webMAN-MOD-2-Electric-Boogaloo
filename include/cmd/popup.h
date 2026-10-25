@@ -36,12 +36,17 @@
 		else
 			#ifdef FIX_CLOCK
 			{
-				is_popup = 1; 
+				is_popup = 1;
 				char *param2 = param + 11;
 				if(islike(param2, "http://"))
 				{
-					char *url = param2 + strlen(param2) + 1;
-					strcpy(url, param2); get_server_data(url, param2, 2036);
+					// fork (#3): url used to be copied just past param2 inside param[2048]; a long URL overflowed
+					// the stack. Keep it in its own bounded buffer and reject an over-long URL.
+					char url[256];
+					if(strlen(param2) < sizeof(url))
+					{
+						strcpy(url, param2); get_server_data(url, param2, HTML_RECV_SIZE - 11 - 1);
+					}
 				}
 			}
 			#else

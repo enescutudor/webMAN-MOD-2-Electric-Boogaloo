@@ -48,7 +48,7 @@ static u8 parsePath(char *absPath_s, const char *path, const char *cwd, bool sca
 
 	if(*path == '/')
 	{
-		strcopy(absPath_s, path);
+		strncopy(absPath_s, STD_PATH_LEN, path); // fork (parsePath): was strcopy (unbounded) into absPath_s[STD_PATH_LEN]
 
 		normalize_path(absPath_s, true);
 
@@ -57,11 +57,12 @@ static u8 parsePath(char *absPath_s, const char *path, const char *cwd, bool sca
 	}
 	else
 	{
-		u16 len = strcopy(absPath_s, cwd);
+		strncopy(absPath_s, STD_PATH_LEN, cwd);
 
-		normalize_path(absPath_s, true);
+		normalize_path(absPath_s, true); // ensures a trailing '/'
 
-		strcat(absPath_s + len, path);
+		u16 len = strlen(absPath_s); // fork (parsePath): append after the normalized cwd, bounded (was strcat)
+		if(len < STD_PATH_LEN) strncopy(absPath_s + len, STD_PATH_LEN - len, path);
 	}
 
 	#ifdef USE_NTFS
@@ -280,7 +281,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	while(connactive && working && ftp_working && ftp_session)
 	{
 		_memset(buffer, FTP_RECV_SIZE);
-		rlen = (int)recv(conn_s_ftp, buffer, FTP_RECV_SIZE, 0);
+		rlen = (int)recv(conn_s_ftp, buffer, FTP_RECV_SIZE - 1, 0); // fork (#11): leave room for buffer[rlen] = 0
 		if(rlen > 0)
 		{
 			buffer[rlen] = '\0';
@@ -290,7 +291,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 			is_ntfs = false;
 
-			int split = ssplit(buffer, cmd, 15, param, STD_PATH_LEN);
+			int split = ssplit(buffer, cmd, 15, param, STD_PATH_LEN - 1); // fork (#12): rmaxlen is max chars; param is STD_PATH_LEN bytes
 
 			if(!working || !ftp_working || _IS(cmd, "QUIT") || _IS(cmd, "BYE"))
 			{
@@ -1197,7 +1198,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(split)
 					{
-						split = ssplit(param, cmd, 10, filename, STD_PATH_LEN);
+						split = ssplit(param, cmd, 10, filename, STD_PATH_LEN - 1); // fork (#12): filename is STD_PATH_LEN bytes
 
 						if(_IS(cmd, "HELP"))
 						{
@@ -1284,7 +1285,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(_IS(cmd, "CHMOD"))
 						{
 							strcpy(param, filename);
-							split = ssplit(param, cmd, 10, filename, STD_PATH_LEN);
+							split = ssplit(param, cmd, 10, filename, STD_PATH_LEN - 1); // fork (#12): filename is STD_PATH_LEN bytes
 
 							int mode = oct(cmd);
 

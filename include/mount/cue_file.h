@@ -17,10 +17,11 @@ static int parse_lba(const char *templn, int ret_value)
 	return ((((tmin * 60) + tsec) * 75) + tfrm); // msf_to_lba
 }
 
-static int get_line(char *templn, const char *cue_buf, const int buf_size, const int start)
+static int get_line(char *templn, const int dst_size, const char *cue_buf, const int buf_size, const int start)
 {
 	int l = 0;
 	int len = MIN(buf_size, MAX_LINE_LEN);
+	if(dst_size > 0 && len > dst_size - 1) len = dst_size - 1; // fork (#9): never write past the caller's buffer
 
 	int lp = start;
 	bool eol = false;
@@ -45,7 +46,7 @@ static int get_line(char *templn, const char *cue_buf, const int buf_size, const
 	return NONE;
 }
 
-static unsigned int parse_cue(char *templn, const char *cue_buf, const int cue_size, TrackDef *tracks)
+static unsigned int parse_cue(char *templn, const int templn_size, const char *cue_buf, const int cue_size, TrackDef *tracks)
 {
 	if(!cue_buf || !templn || !tracks) return 1; // default 1 track
 
@@ -62,7 +63,7 @@ static unsigned int parse_cue(char *templn, const char *cue_buf, const int cue_s
 
 		while(lp < cue_size)
 		{
-			lp = get_line(templn, cue_buf, cue_size, lp);
+			lp = get_line(templn, templn_size, cue_buf, cue_size, lp);
 
 			if(lp < 1) break;
 			if(*templn == NULL) continue;

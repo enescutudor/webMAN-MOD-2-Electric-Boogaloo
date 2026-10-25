@@ -1,7 +1,2 @@
 # Tests that fail on the current code: they reproduce bugs from the report that are not fixed yet.
 # Remove them from here together with the fix (S18).
-atk_ftp_ssplit_off_by_one
-atk_htmlenc_overflow
-atk_htmlenc_xml_special
-atk_cue_long_line
-atk_abspath_overflow

@@ -207,15 +207,36 @@ static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 	char tmp[10]; u8 t, c;
 	for(size_t i = 0; src[i]; i++)
 	{
-		if((unsigned char)src[i] >= 0x7F || (unsigned char)src[i] < 0x20)
+		const char *esc = NULL;
+		// fork (#7 / html.h): escape the HTML/XML special characters so a title with & " < > ' cannot break the page
+		switch(src[i])
+		{
+			case '&': esc = "&amp;";  break;
+			case '"': esc = "&quot;"; break;
+			case '<': esc = "&lt;";   break;
+			case '>': esc = "&gt;";   break;
+			case '\'': esc = "&#x27;"; break;
+		}
+
+		if(esc)
+		{
+			t = strlen(esc); c = 0;
+			if(j + t > MAX_LINE_LEN) break;
+			while(t--) {dst[j++] = esc[c++];}
+		}
+		else if((unsigned char)src[i] >= 0x7F || (unsigned char)src[i] < 0x20)
 		{
 			t = sprintf(tmp, "&#x%X;", (unsigned char)src[i]); c = 0;
+			if(j + t > MAX_LINE_LEN) break; // fork (#7): stop before overflowing dst (was clamped only after writing)
 			while(t--) {dst[j++] = tmp[c++];}
 		}
-		else dst[j++] = src[i];
+		else
+		{
+			if(j + 1 > MAX_LINE_LEN) break; // fork (#7)
+			dst[j++] = src[i];
+		}
 	}
 
-	j = MIN(j, MAX_LINE_LEN);
 	dst[j] = '\0';
 
 	if(cpy2src) strcpy(src, dst);

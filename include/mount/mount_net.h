@@ -107,7 +107,7 @@ if(BETWEEN('0', netid, '4'))
 					u16 cue_size = read_sfo(TEMP_NET_PSXCUE, cue_buf);
 					cellFsUnlink(TEMP_NET_PSXCUE);
 
-					num_tracks = parse_cue(full_path, cue_buf, cue_size, tracks);
+					num_tracks = parse_cue(full_path, MAX_LINE_LEN, cue_buf, cue_size, tracks); // fork (#9): full_path[MAX_LINE_LEN]
 					free(cue_buf);
 				}
 			}

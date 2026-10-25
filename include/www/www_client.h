@@ -532,7 +532,7 @@ parse_request:
 			line_value(header, "Origin", ':', origin, sizeof(origin));
 			line_value(header, "Range", ':', range, sizeof(range));
 
-			for(size_t n = 0; header[n]; n++) {if(header[n] == '\r' || header[n] == '\n' || n >= HTML_RECV_SIZE) {header[n] = 0; break;}}
+			for(size_t n = 0; header[n]; n++) {if(header[n] == '\r' || header[n] == '\n' || n >= HTML_RECV_LAST) {header[n] = 0; break;}} // fork (#off-by-one): was HTML_RECV_SIZE (would touch header[2048])
 
 			ssplit(header, cmd, 15, header, HTML_RECV_LAST);
 			ssplit(header, param, HTML_RECV_LAST, cmd, 15);
