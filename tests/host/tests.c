@@ -215,7 +215,7 @@ TEST(line_value_full_buffer)
 	free(req);
 }
 
-// ---------- http_etag / http_status_304 / http_cache_control (fork/http_cache.h) ----------
+// ---------- http_etag / http_status / http_range / http_cache_control (fork/http_cache.h) ----------
 
 TEST(http_etag_format)
 {
@@ -226,12 +226,43 @@ TEST(http_etag_format)
 	CHECK_STR(etag, "");
 }
 
-TEST(http_status_304_keeps_headers)
+TEST(http_status_keeps_headers)
 {
 	char h[256] = "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nETag: \"1-2\"\r\n";
-	size_t len = http_status_304(h, strlen(h));
+	size_t len = http_status(h, strlen(h), "304 Not Modified");
 	CHECK_STR(h, "HTTP/1.1 304 Not Modified\r\nContent-Type: text/css\r\nETag: \"1-2\"\r\n");
 	CHECK(len == strlen(h));
+	len = http_status(h, len, "200 OK");   // and back, same length
+	CHECK_STR(h, "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nETag: \"1-2\"\r\n");
+	CHECK(len == strlen(h));
+}
+
+#define RANGE(v, size, ret, s, e) do { u64 s_ = 77, e_ = 77; CHECK(http_range(v, size, &s_, &e_) == (ret)); \
+	if((ret) > 0) { CHECK(s_ == (u64)(s)); CHECK(e_ == (u64)(e)); } } while(0)
+
+TEST(http_range_forms)
+{
+	RANGE("bytes=0-99", 1000, 1, 0, 99);
+	RANGE("bytes=500-", 1000, 1, 500, 999);
+	RANGE("bytes=-100", 1000, 1, 900, 999);       // the last 100 bytes
+	RANGE("bytes=-5000", 1000, 1, 0, 999);        // suffix longer than the file
+	RANGE("bytes=900-5000", 1000, 1, 900, 999);   // end past the file is clamped
+	RANGE("bytes=999-999", 1000, 1, 999, 999);
+}
+
+TEST(http_range_whole_file_or_416)
+{
+	RANGE("", 1000, 0, 0, 0);
+	RANGE("bytes=0-99,200-299", 1000, 0, 0, 0);   // multi-part: the whole file
+	RANGE("items=0-99", 1000, 0, 0, 0);
+	RANGE("bytes=99-0", 1000, 0, 0, 0);           // invalid: ignored
+	RANGE("bytes=a-b", 1000, 0, 0, 0);
+	RANGE("bytes=-", 1000, 0, 0, 0);
+	RANGE("bytes=5-9x", 1000, 0, 0, 0);
+	RANGE("bytes=1234567890123456789-", 1000, 0, 0, 0); // too many digits
+	RANGE("bytes=1000-", 1000, -1, 0, 0);         // starts after the end: 416
+	RANGE("bytes=-0", 1000, -1, 0, 0);
+	RANGE("bytes=0-", 0, -1, 0, 0);               // empty file
 }
 
 TEST(http_cache_control_paths)

@@ -308,6 +308,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 					if(data_s >= 0 && semStatus == CELL_OK)
 					{
+						setsockopt(data_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)); // fork (6.7): a client that stops reading releases the thread
+
 						if(split)
 						{
 							findPath(filename, param, cwd);
@@ -346,7 +348,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 											read_e = ps3ntfs_read(fd, (void *)buffer2, BUFFER_SIZE_FTP);
 											if(read_e > 0)
 											{
-												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) break; // FAILED
+												if(send(data_s, buffer2, (size_t)read_e, 0) != (int)read_e) break; // FAILED (fork 6.7: also a partial send)
 											}
 											else if(read_e < 0)
 												break; // FAILED
@@ -380,7 +382,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 												#ifdef UNLOCK_SAVEDATA
 												if(webman_config->unlock_savedata && (read_e < _4KB_)) unlock_param_sfo(filename, (unsigned char*)buffer2, (u16)read_e);
 												#endif
-												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) break; // FAILED
+												if(send(data_s, buffer2, (size_t)read_e, 0) != (int)read_e) break; // FAILED (fork 6.7: also a partial send)
 											}
 											else
 												{err = CELL_FS_OK; break;}

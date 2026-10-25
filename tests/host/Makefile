@@ -13,7 +13,7 @@ EXTRACT := \
 	include/file/file.h:get_ext,normalized_len,normalize_path \
 	include/ftp.h:parsePath,absPath,ssplit \
 	include/mount/cue_file.h:get_line \
-	include/fork/http_cache.h:line_value,http_etag,http_status_304,http_cache_control
+	include/fork/http_cache.h:line_value,http_etag,http_status,parse_u64,http_range,http_cache_control
 
 .PHONY: test clean
 test: t
