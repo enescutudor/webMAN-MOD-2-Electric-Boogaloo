@@ -122,6 +122,22 @@
 				<P key="title"><>Swarm [Torrent client] by mohasi</></P>
 				<P key="info"><>392 KB</></P>
 			</T>
+			<T key="app041" include="inc">
+				<P key="title"><>JellyFin-PS3</></P>
+				<P key="info"><>3 MB</></P>
+			</T>
+			<T key="app042" include="inc">
+				<P key="title"><>TEE Vanced PS3</></P>
+				<P key="info"><>801 KB</></P>
+			</T>
+			<T key="app043" include="inc">
+				<P key="title"><>TEE Remote Play</></P>
+				<P key="info"><>433 KB</></P>
+			</T>
+			<T key="app044" include="inc">
+				<P key="title"><>PS3 Health by lucasdaddiego</></P>
+				<P key="info"><>502 KB</></P>
+			</T>
 			<T key="appLIC" include="inc">
 				<P key="title"><>License Pack BIN</></P>
 				<P key="info"><>2.38 MB</></P>
@@ -172,12 +188,18 @@
 			<Q class="type:x-xmb/folder-pixmap" key="app016" attr="app016" src="#app016_link"/><!-- PS3 ezRemote Client -->
 
 			<Q class="type:x-xmb/folder-pixmap" key="app011" attr="app011" src="#app011_link"/><!-- Simple File Manager MOD -->
+
 			<Q class="type:x-xmb/folder-pixmap" key="app030" attr="app030" src="#app030_link"/><!-- File Manager by mohasi -->
 			<Q class="type:x-xmb/folder-pixmap" key="app031" attr="app031" src="#app031_link"/><!-- Yo! Player by mohasi -->
 			<Q class="type:x-xmb/folder-pixmap" key="app032" attr="app032" src="#app032_link"/><!-- RenPy Player by mohasi -->
 			<Q class="type:x-xmb/folder-pixmap" key="app033" attr="app033" src="#app033_link"/><!-- Cell Stream by mohasi -->
 			<Q class="type:x-xmb/folder-pixmap" key="app034" attr="app034" src="#app034_link"/><!-- Thermal Bench by mohasi -->
 			<Q class="type:x-xmb/folder-pixmap" key="app035" attr="app035" src="#app035_link"/><!-- Swarm by mohasi -->
+
+			<Q class="type:x-xmb/folder-pixmap" key="app041" attr="app041" src="#app041_link"/><!-- JellyFin-PS3 -->
+			<Q class="type:x-xmb/folder-pixmap" key="app042" attr="app042" src="#app042_link"/><!-- TEE-Vanced-PS -->
+			<Q class="type:x-xmb/folder-pixmap" key="app043" attr="app043" src="#app043_link"/><!-- TEE-Remote-Play -->
+			<Q class="type:x-xmb/folder-pixmap" key="app044" attr="app044" src="#app044_link"/><!-- PS3-Health -->
 
 			<!-- <Q class="type:x-xmb/folder-pixmap" key="app017" attr="app017" src="#app017_link"/>Ultimate Toolbox v2.03 FULL 4.84-4.88-->
 			<!-- <Q class="type:x-xmb/folder-pixmap" key="app018" attr="app018" src="#app018_link"/>Ultimate Toolbox v2.03 FULL 4.89-4.92-->
@@ -517,6 +539,66 @@
 		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
 	</V>
 
+	<!-- JellyFin-PS3 -->
+	<V id="app041_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/JellyFin-PS3.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/JellyFin-PS3.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>UP0001-JFPS30000_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- TEE-Vanced-PS -->
+	<V id="app042_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/TEE-Vanced-PS3.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/TEE-Vanced-PS3.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-TEEVANCED_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- TEE-Remote-Play -->
+	<V id="app043_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/TEE-Remote-Play.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/TEE-Remote-Play.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>HB0001-TEECRPMX1_00-TEECELLRPMAX0001</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- PS3-Health -->
+	<V id="app044_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/PS3-Health.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/Addons/PS3-Health.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>EP0001-HDSH00001_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
 	<!-- Ultimate Toolbox v2.03 FULL -->
 	<V id="app017_link">
 		<A>
@@ -705,22 +787,25 @@
 
 			<T key="mnu">
 				<P key="icon_rsc"><>tex_album_icon</></P>
+				<P key="child"><>segment</></P>
+			</T>
+			<T key="menu10" include="mnu">
+				<P key="title"><>PS1 EMU MODs</></P>
 			</T>
 			<T key="menu11" include="mnu">
 				<P key="title"><>PS1 NETEMU MODs</></P>
-				<P key="child"><>segment</></P>
 			</T>
 			<T key="menu12" include="mnu">
 				<P key="title"><>PS2 NETEMU MODs</></P>
-				<P key="child"><>segment</></P>
 			</T>
 			<T key="menu13" include="mnu">
 				<P key="title"><>PS2 GXEMU MODs</></P>
-				<P key="child"><>segment</></P>
 			</T>
 			<T key="menu14" include="mnu">
 				<P key="title"><>PS2 GXEMU MODs</></P>
-				<P key="child"><>segment</></P>
+			</T>
+			<T key="menu15" include="mnu">
+				<P key="title"><>CFW Evilnat 4.93 Latest Fixes</></P>
 			</T>
 		</A>
 		<I>
@@ -737,10 +822,19 @@
 			<Q class="type:x-xmb/folder-pixmap" key="mod101" attr="mod101" src="#mod101_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod102" attr="mod102" src="#mod102_link"/>
 
+			<Q class="type:x-xmb/folder-pixmap" key="menu10" attr="menu10" src="#seg_mnu_ps1emu"/><!-- PS1 EMU MODs -->
 			<Q class="type:x-xmb/folder-pixmap" key="menu11" attr="menu11" src="#seg_mnu_ps1netemu"/><!-- PS1 NETEMU MODs -->
 			<Q class="type:x-xmb/folder-pixmap" key="menu12" attr="menu12" src="#seg_mnu_ps2netemu"/><!-- PS2 NETEMU MODs -->
 			<Q class="type:x-xmb/folder-pixmap" key="menu13" attr="menu13" src="#seg_mnu_ps2gxemu"/> <!-- PS2 GXEMU MODs -->
 			<Q class="type:x-xmb/folder-pixmap" key="menu14" attr="menu14" src="#seg_mnu_ps2emu"/>   <!-- PS2 EMU MODs -->
+			<Q class="type:x-xmb/folder-pixmap" key="menu15" attr="menu15" src="#seg_mnu_cfw493"/>   <!-- CFW 4.93 Evilnat -->
+		</I>
+	</V>
+
+	<V id="seg_mnu_ps1emu">
+		<I>
+			<Q class="type:x-xmb/folder-pixmap" key="pkg_dev_blind"	src="#seg_toggle_dev_blind"/>
+			<Q class="type:x-xmb/folder-pixmap" key="items"	src="#seg_mod_ps1emu"/>
 		</I>
 	</V>
 
@@ -772,6 +866,13 @@
 		</I>
 	</V>
 
+	<V id="seg_mnu_cfw493">
+		<I>
+			<Q class="type:x-xmb/folder-pixmap" key="pkg_dev_blind"	src="#seg_toggle_dev_blind"/>
+			<Q class="type:x-xmb/folder-pixmap" key="items"	src="#seg_mod_cfw493"/>
+		</I>
+	</V>
+
 	<V id="seg_mod_ps1netemu">
 		<A>
 			<T key="inc">
@@ -799,14 +900,36 @@
 		</I>
 	</V>
 
+	<V id="seg_mod_ps1emu">
+		<A>
+			<T key="inc">
+				<P key="icon"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+				<P key="info"><>CFW Only. Requires /dev_blind enabled</></P>
+			</T>
+			<T key="mod114" include="inc">
+				<P key="title"><>[PS1 EMU] Install ps1_emu with scanline filtering</></P>
+			</T>
+			<T key="mod115" include="inc">
+				<P key="title"><>[PS1 EMU] Install ps1_emu with scanline 85% filter</></P>
+			</T>
+		</A>
+		<I>
+			<Q class="type:x-xmb/folder-pixmap" key="mod114" attr="mod114" src="#mod114_link"/>
+			<Q class="type:x-xmb/folder-pixmap" key="mod115" attr="mod115" src="#mod115_link"/>
+		</I>
+	</V>
+
 	<V id="seg_mod_ps2netemu">
 		<A>
 			<T key="inc">
 				<P key="icon"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
 				<P key="info"><>CFW Only. Requires /dev_blind enabled</></P>
 			</T>
+			<T key="mod12C" include="inc">
+				<P key="title"><>[PS2 NETEMU] Install ps2_netemu 20260614 with automatic Fan Control on boot</></P>
+			</T>
 			<T key="mod12B" include="inc">
-				<P key="title"><>[PS2 NETEMU] Install ps2_netemu with automatic Fan Control on boot</></P>
+				<P key="title"><>[PS2 NETEMU] Install ps2_netemu 20260327 with automatic Fan Control on boot</></P>
 			</T>
 			<T key="mod12A" include="inc">
 				<P key="title"><>[PS2 NETEMU] Install ps2_netemu with Fan Control + FPS + EE overclocking</></P>
@@ -842,6 +965,7 @@
 			</T>
 		</A>
 		<I>
+			<Q class="type:x-xmb/folder-pixmap" key="mod12C" attr="mod12C" src="#mod12C_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod12B" attr="mod12B" src="#mod12B_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod12A" attr="mod12A" src="#mod12A_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod120" attr="mod120" src="#mod120_link"/>
@@ -916,6 +1040,14 @@ SQUARE + START toggle fan mode</></P>
 				<P key="title"><>[PS2 EMU] Install ps2_emu v2 with Fan Control & hidden Config Parameter menu</></P>
 				<P key="info"><>CFW Only. Requires /dev_blind enabled</></P>
 			</T>
+			<T key="mod14B" include="inc">
+				<P key="title"><>[PS2 EMU] Install ps2_emu v2 with scanlines</></P>
+				<P key="info"><>CFW Only. Requires /dev_blind enabled</></P>
+			</T>
+			<T key="mod14C" include="inc">
+				<P key="title"><>[PS2 EMU] Install ps2_emu v2 with scanlines 80%</></P>
+				<P key="info"><>CFW Only. Requires /dev_blind enabled</></P>
+			</T>
 			<T key="mod140" include="inc">
 				<P key="title"><>[PS2 EMU] Install ps2_emu v2 with temperature display</></P>
 				<P key="info"><>CFW Only. Requires /dev_blind enabled. Press SQUARE + SELECT for Temperature display</></P>
@@ -931,9 +1063,37 @@ SQUARE + START toggle fan mode</></P>
 		</A>
 		<I>
 			<Q class="type:x-xmb/folder-pixmap" key="mod14A" attr="mod14A" src="#mod14A_link"/>
+			<Q class="type:x-xmb/folder-pixmap" key="mod14B" attr="mod14B" src="#mod14B_link"/>
+			<Q class="type:x-xmb/folder-pixmap" key="mod14C" attr="mod14C" src="#mod14C_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod140" attr="mod140" src="#mod140_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod141" attr="mod141" src="#mod141_link"/>
 			<Q class="type:x-xmb/folder-pixmap" key="mod142" attr="mod142" src="#mod142_link"/>
+		</I>
+	</V>
+
+	<!-- CFW 4.93 Evilnat -->
+	<V id="seg_mod_cfw493">
+		<A>
+			<T key="inc">
+				<P key="icon"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+				<P key="info"><>CFW 4.93 Evilnat Only. Requires /dev_blind enabled</></P>
+			</T>
+			<T key="mod211" include="inc">
+				<P key="title"><>[CFW 4.93] Latest fixes</></P>
+			</T>
+			<T key="mod212" include="inc">
+				<P key="title"><>[CFW 4.93 CEX] VSH Fix</></P>
+				<P key="info"><>Fix error 80028EA8 - Unable to connect to the internet</></P>
+			</T>
+			<T key="mod213" include="inc">
+				<P key="title"><>[CFW 4.93 PEX] VSH Fix</></P>
+				<P key="info"><>Fix error 80028EA8 - Unable to connect to the internet</></P>
+			</T>
+		</A>
+		<I>
+			<Q class="type:x-xmb/folder-pixmap" key="mod211" attr="mod211" src="#mod211_link"/>
+			<Q class="type:x-xmb/folder-pixmap" key="mod212" attr="mod212" src="#mod212_link"/>
+			<Q class="type:x-xmb/folder-pixmap" key="mod213" attr="mod213" src="#mod213_link"/>
 		</I>
 	</V>
 
@@ -1148,6 +1308,34 @@ SQUARE + START toggle fan mode</></P>
 		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
 	</V>
 
+	<V id="mod114_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps1_emu_scanlines-req_dev_blind_enabled.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps1_emu_scanlines-req_dev_blind_enabled.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<V id="mod115_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps1_emu_scanlines85-req_dev_blind_enabled.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps1_emu_scanlines85-req_dev_blind_enabled.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
 	<V id="mod12A_link">
 		<A>
 			<T key="pkg_link">
@@ -1168,6 +1356,20 @@ SQUARE + START toggle fan mode</></P>
 				<P key="info"><>net_package_install</></P>
 				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emulators_20260327-req_dev_blind_enabled.pkg</></P>
 				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emulators_20260327-req_dev_blind_enabled.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<V id="mod12C_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emulators_20260614-req_dev_blind_enabled.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emulators_20260614-req_dev_blind_enabled.pkg</></P>
 				<P key="content_name"><>msg_install</></P>
 				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
 				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
@@ -1442,6 +1644,34 @@ SQUARE + START toggle fan mode</></P>
 		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
 	</V>
 
+	<V id="mod14B_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emu_scanlines-req_dev_blind_enabled.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emu_scanlines-req_dev_blind_enabled.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<V id="mod14C_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emu_scanlines80-req_dev_blind_enabled.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emu_scanlines80-req_dev_blind_enabled.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
 	<V id="mod141_link">
 		<A>
 			<T key="pkg_link">
@@ -1464,6 +1694,49 @@ SQUARE + START toggle fan mode</></P>
 				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/install_ps2_emu_z_all_strings-req_dev_blind_enabled.pkg</></P>
 				<P key="content_name"><>msg_install</></P>
 				<P key="content_id"><>CUSTOM-INSTALLER_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- Evilnat 4.93 Latest Fixes -->
+	<V id="mod211_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/4.93.Evilnat.Latest.fixes.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/4.93.Evilnat.Latest.fixes.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>EVIPS3-FIXS00001_00-00PKG0BY0EVILNAT</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<V id="mod212_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/vsh_update_fix.CEX.4.93.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/vsh_update_fix.CEX.4.93.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>EVIPS3-VSHU00001_00-00PKG0BY0EVILNAT</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<V id="mod213_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/vsh_update_fix.PEX.4.93.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/MODS/vsh_update_fix.PEX.4.93.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>EVIPS3-VSHU00001_00-00PKG0BY0EVILNAT</></P>
 				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
 			</T>
 		</A>
@@ -1966,18 +2239,26 @@ SQUARE + START toggle fan mode</></P>
 				<P key="info"><>2.7 MB - Nintendo 64 emulator</></P>
 			</T>
 			<T key="emu003" include="inc">
-				<P key="title"><>Cell64 by ZeBobbel</></P>
-				<P key="info"><>0.5 MB - Nintendo 64 emulator</></P>
+				<P key="title"><>salsaDS by ricowp81</></P>
+				<P key="info"><>2.5 MB - Nintendo DS emulator</></P>
 			</T>
 			<T key="emu004" include="inc">
-				<P key="title"><>ScummVM</></P>
-				<P key="info"><>86.4 MB - Adventure and RPG game engine</></P>
+				<P key="title"><>Cell64 by ZeBobbel</></P>
+				<P key="info"><>0.5 MB - Nintendo 64 emulator</></P>
 			</T>
 			<T key="emu005" include="inc">
 				<P key="title"><>NotDC by Mayo1970</></P>
 				<P key="info"><>3.4 MB - Dreamcast emulator</></P>
 			</T>
 			<T key="emu006" include="inc">
+				<P key="title"><>ScummVM</></P>
+				<P key="info"><>86.4 MB - Adventure and RPG game engine</></P>
+			</T>
+			<T key="emu007" include="inc">
+				<P key="title"><>PicoDrive PS3 by theheroGAC</></P>
+				<P key="info"><>3.9 MB - Sega CD / 32X / Megadrive / Genesis emulator</></P>
+			</T>
+			<T key="emu008" include="inc">
 				<P key="title"><>UAE4ALL2HD PS3 by theheroGAC</></P>
 				<P key="info"><>3.4 MB - Amiga emulator</></P>
 			</T>
@@ -1986,10 +2267,12 @@ SQUARE + START toggle fan mode</></P>
 			<Q class="type:x-xmb/folder-pixmap" key="emu000" attr="emu000" src="#emu000_link"/><!-- RetroArch CE -->
 			<Q class="type:x-xmb/folder-pixmap" key="emu001" attr="emu001" src="#emu001_link"/><!-- RetroArch PS3 Overlays -->
 			<Q class="type:x-xmb/folder-pixmap" key="emu002" attr="emu002" src="#emu002_link"/><!-- salsa64 -->  
-			<Q class="type:x-xmb/folder-pixmap" key="emu003" attr="emu003" src="#emu003_link"/><!-- Cell64 -->   
-			<Q class="type:x-xmb/folder-pixmap" key="emu004" attr="emu004" src="#emu004_link"/><!-- ScummVM -->  
+			<Q class="type:x-xmb/folder-pixmap" key="emu003" attr="emu003" src="#emu003_link"/><!-- salsaDS -->   
+			<Q class="type:x-xmb/folder-pixmap" key="emu004" attr="emu004" src="#emu004_link"/><!-- Cell64 -->  
 			<Q class="type:x-xmb/folder-pixmap" key="emu005" attr="emu005" src="#emu005_link"/><!-- NotDC -->
-			<Q class="type:x-xmb/folder-pixmap" key="emu006" attr="emu006" src="#emu006_link"/><!-- UAE4ALL2HD -->
+			<Q class="type:x-xmb/folder-pixmap" key="emu006" attr="emu006" src="#emu006_link"/><!-- ScummVM -->
+			<Q class="type:x-xmb/folder-pixmap" key="emu007" attr="emu007" src="#emu007_link"/><!-- PicoDrive -->
+			<Q class="type:x-xmb/folder-pixmap" key="emu008" attr="emu008" src="#emu008_link"/><!-- UAE4ALL2HD -->
 		</I>
 	</V>
 
@@ -2038,8 +2321,23 @@ SQUARE + START toggle fan mode</></P>
 		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
 	</V>
 
-	<!-- Cell64 -->
+	<!-- salsaDS -->
 	<V id="emu003_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/salsads.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/salsads.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>UP0001-SLDS00009_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- Cell64 -->
+	<V id="emu004_link">
 		<A>
 			<T key="pkg_link">
 				<P key="info"><>net_package_install</></P>
@@ -2047,21 +2345,6 @@ SQUARE + START toggle fan mode</></P>
 				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/Cell64.pkg</></P>
 				<P key="content_name"><>msg_install</></P>
 				<P key="content_id"><>CUSTOM-CLFI00001_00-0000000000000000</></P>
-				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
-			</T>
-		</A>
-		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
-	</V>
-
-	<!-- ScummVM -->
-	<V id="emu004_link">
-		<A>
-			<T key="pkg_link">
-				<P key="info"><>net_package_install</></P>
-				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/scummvm-ps3.pkg</></P>
-				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/scummvm-ps3.pkg</></P>
-				<P key="content_name"><>msg_install</></P>
-				<P key="content_id"><>UP0001-SCUM12000_00-0000000000000000</></P>
 				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
 			</T>
 		</A>
@@ -2083,8 +2366,38 @@ SQUARE + START toggle fan mode</></P>
 		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
 	</V>
 
-	<!-- UAE4ALL2HD -->
+	<!-- ScummVM -->
 	<V id="emu006_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/scummvm-ps3.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/scummvm-ps3.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>UP0001-SCUM12000_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- PicoDrive -->
+	<V id="emu007_link">
+		<A>
+			<T key="pkg_link">
+				<P key="info"><>net_package_install</></P>
+				<P key="pkg_src"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/PicoDrive.pkg</></P>
+				<P key="pkg_src_qa"><>https://gh-proxy.com/github.com/aldostools/Resources/releases/download/RetroArch_CE/PicoDrive.pkg</></P>
+				<P key="content_name"><>msg_install</></P>
+				<P key="content_id"><>UP0001-PICO00001_00-0000000000000000</></P>
+				<P key="prod_pict_path"><>/dev_hdd0//game/XMBMANPLS/USRDIR/IMAGES/package.png</></P>
+			</T>
+		</A>
+		<I><Item class="type:x-xmb/xmlnpsignup" key="pkg_link" attr="pkg_link"/></I>
+	</V>
+
+	<!-- UAE4ALL2HD -->
+	<V id="emu008_link">
 		<A>
 			<T key="pkg_link">
 				<P key="info"><>net_package_install</></P>
