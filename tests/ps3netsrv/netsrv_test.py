@@ -22,6 +22,7 @@ import time
 PORT = 38019
 CHUNK = 65536  # what webMAN asks for in one read (netclient.h)
 OPEN_FILE, READ_FILE = 0x1224, 0x1227
+OPEN_DIR, MKDIR, STAT_FILE, READ_DIR = 0x122A, 0x122D, 0x1230, 0x1232
 
 
 class Client:
@@ -61,6 +62,32 @@ class Client:
                 d = without_volume_dates(off, d)
             h.update(d); off += len(d)
         return h.hexdigest(), size
+
+    def path_cmd(self, opcode, path, result_size):
+        p = path.encode()
+        self.s.sendall(struct.pack(">HH12x", opcode, len(p)) + p)
+        return self.recv(result_size)
+
+    def stat(self, path):
+        """File size, 0 for a directory, -1 when the server rejects the path."""
+        size, _m, _c, _a, _d = struct.unpack(">qQQQb", self.path_cmd(STAT_FILE, path, 33))
+        return size
+
+    def read_dir(self, path):
+        """Entry names of a folder (OPEN_DIR + READ_DIR), or None when the path is rejected."""
+        (res,) = struct.unpack(">i", self.path_cmd(OPEN_DIR, path, 4))
+        if res < 0:
+            return None
+        self.s.sendall(struct.pack(">H14x", READ_DIR))
+        (n,) = struct.unpack(">q", self.recv(8))
+        if n <= 0:
+            return []
+        raw = self.recv(n * 529)  # netiso_read_dir_result_data: size(8) + mtime(8) + is_dir(1) + name(512)
+        return [raw[i * 529 + 17:(i + 1) * 529].split(b"\0")[0].decode("utf-8", "replace") for i in range(n)]
+
+    def mkdir(self, path):
+        (res,) = struct.unpack(">i", self.path_cmd(MKDIR, path, 4))
+        return res
 
     def close(self):
         self.s.close()
@@ -117,8 +144,51 @@ def cpu(pid):
     return (int(c[11]) + int(c[12])) / os.sysconf("SC_CLK_TCK")
 
 
+def traversal(binary, base):
+    """#1: the served root is <base>/root; <base>/secret.txt and <base> itself are outside it. Every attack below
+    must be refused. B0 (upstream) is expected to leak, which is the proof the check was missing."""
+    root = os.path.join(base, "root")
+    os.makedirs(os.path.join(root, "PS3ISO"), exist_ok=True)
+    with open(os.path.join(base, "secret.txt"), "wb") as f:
+        f.write(b"TOPSECRET\n")
+    # a real ".." path reaches <base>; the first "/.." the check looked at was "/..x", which passed
+    up = "/..x/../.."
+    attacks = [
+        ("stat secret via /..x/../..", lambda c: c.stat(f"{up}/secret.txt") >= 0),
+        ("list the parent of the root", lambda c: (c.read_dir(up) or []) and "secret.txt" in c.read_dir(up)),
+        ("open secret via /..x/../..", lambda c: c.open(f"{up}/secret.txt") >= 0),
+        ("backslash variant", lambda c: c.stat("\\..x\\..\\..\\secret.txt") >= 0),
+    ]
+    # the ".." components need a real "..x" dir next to the root; a write build can MKDIR it, otherwise make it here
+    p = start(binary, root)
+    leaked = []
+    try:
+        try:
+            Client().mkdir("/..x")  # write builds can MKDIR; a read-only build closes the connection instead
+        except (OSError, struct.error):
+            pass
+        if not os.path.isdir(os.path.join(root, "..x")):
+            os.makedirs(os.path.join(root, "..x"), exist_ok=True)  # read-only build: make the dir so the path check is still exercised
+        for name, attack in attacks:
+            c = Client()
+            try:
+                hit = bool(attack(c))
+            except (OSError, struct.error):
+                hit = False  # connection aborted by the server = refused
+            c.close()
+            print(f"  {'LEAK' if hit else 'ok  '} {name}")
+            if hit:
+                leaked.append(name)
+    finally:
+        p.kill(); p.wait()
+    print(f"traversal: {'SECURE' if not leaked else 'VULNERABLE'} ({len(attacks) - len(leaked)}/{len(attacks)} refused)")
+    return not leaked
+
+
 def main():
     binary, d, test = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2]), sys.argv[3]
+    if test == "traversal":
+        sys.exit(0 if traversal(binary, d) else 1)
     make_data(d)
     p = start(binary, d, no_stdin=(test == "fd0"))
     try:

@@ -375,12 +375,13 @@ static char *translate_path(char *path, int *viso)
 		return NULL;
 	}
 
-	// check unsecure path
-	char *p = strstr(path, "/..");
-	if(p)
+	// check unsecure path (fork #1): reject ANY ".." path component, not only the first "/.." found.
+	// normalize_path has already turned '\' into '/', so a single scan covers Windows separators too.
+	for(char *p = path; (p = strstr(p, "..")); p += 2)
 	{
-		p += 3;
-		if ((*p == 0) || (*p == '/'))
+		bool at_start = (p == path) || (p[-1] == '/');
+		bool at_end   = (p[2] == 0)  || (p[2] == '/');
+		if(at_start && at_end)
 		{
 			printf("ERROR: The path \"%s\" is unsecure!\n", path);
 			if(path) free(path);
@@ -388,7 +389,7 @@ static char *translate_path(char *path, int *viso)
 		}
 	}
 
-	p = (char *)malloc(MAX_PATH_LEN + root_len + path_len + 1);
+	char *p = (char *)malloc(MAX_PATH_LEN + root_len + path_len + 1);
 	if(!p)
 	{
 		printf("CRITICAL: Memory allocation error\n");
@@ -2194,6 +2195,20 @@ int main(int argc, char *argv[])
 	// main loop
 	//////////////
 	set_normal_color();
+
+	// fork (S17): warn when any LAN client is accepted (no whitelist). A write build (no READ_ONLY) then lets a
+	// client read AND modify every path this process can reach, so point to the safer options.
+	if(whitelist_start == 0)
+	{
+		printf("WARNING: no whitelist set - any device on the network can connect.\n");
+#ifndef READ_ONLY
+		printf("WARNING: this build allows writes (create/write/delete/mkdir/rmdir).\n");
+		printf("         Pass a whitelist (e.g. 192.168.1.*) or use a READ_ONLY build for a safer setup.\n");
+#else
+		printf("         Pass a whitelist (e.g. 192.168.1.*) to restrict access.\n");
+#endif
+	}
+
 	printf("Waiting for client...\n");
 	memset(clients, 0, sizeof(clients));
 

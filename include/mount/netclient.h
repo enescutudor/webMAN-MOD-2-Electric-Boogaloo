@@ -10,6 +10,7 @@ static u16 net_copy_in_progress = 0;
 #endif
 
 static u16 normalized_len(const char *path);
+static u64 get_free_space(const char *dev_name); // fork (S17): defined in file/file_devs.h, included later
 
 static u32 CD_SECTOR_SIZE_2352 = 2352;
 
@@ -227,6 +228,10 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 	s64 size = open_remote_file(ns, remote_file, &abort_connection);
 
 	u64 file_size = size; current_size = size;
+
+	// fork (S17): a malicious or buggy server could report a huge size and fill the local disk
+	u64 freespace = get_free_space(local_file); // defined in file/file_devs.h (included after this header)
+	if(freespace && (file_size > freespace)) return FAILED;
 
 	if(file_size > 0)
 	{
