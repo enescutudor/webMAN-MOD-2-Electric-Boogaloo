@@ -1,3 +1,44 @@
+# webMAN MOD 2: Electric Boogaloo
+
+**A fork of [aldostools/webMAN-MOD](https://github.com/aldostools/webMAN-MOD) focused on performance and on not
+disturbing the game you are playing, without touching anything that could brick a console.**
+
+webMAN MOD runs inside the PS3 system software next to your games, on a tight memory and CPU budget. Its web,
+FTP and network-game services work well, but they leave speed on the table in the menus (XMB) and a few of them
+can step on a running game. This fork explores how far that can be improved while keeping the in-game
+behaviour identical to upstream, and fixes the bugs found along the way.
+
+### Principles
+- **The console's low-level parts are off limits.** Flash, EPROM, LV1/LV2 memory, Cobra syscalls, the system
+  registry, the fan and SYSCON are never modified; those files only come in unchanged from upstream. This is
+  enforced by `PROTECTED_PATHS.txt` and a pre-commit hook; files one step away from them need a written
+  "Impact low-level" justification in every commit.
+- **Economic in-game, full speed in the XMB.** Optimizations that cost memory or CPU are only active in the
+  menus; while a game runs, webMAN behaves as before (or uses less).
+- **Measured, not assumed.** Every change is benchmarked on a real console against the unmodified upstream
+  build, with data checked by MD5, and kept only if it helps.
+- **Small diffs, new code in new files** (`include/fork/`), so upstream updates keep merging cleanly.
+
+### Changes so far
+- **Web UI:** browser caching (ETag/304) for the game list, covers and UI assets: a second visit of the game
+  list transfers ~35 KB instead of ~6.7 MB; lazy-loaded covers; jQuery UI reduced to the one widget used
+  (254 KB -> 39 KB); correct MIME type for JavaScript; CORS only for an origin you allow.
+- **FTP:** directory listings sent in 4 KB chunks (~18% faster on large folders, same bytes on the wire).
+- **Network games:** refreshing the game list while playing no longer cuts the running game's connection
+  to ps3netsrv (C++ server).
+- **ps3netsrv (PC side):** optimized builds (`-O2`) and the open-file virtual ISO reader on Linux/macOS, with
+  a fix for a descriptor bug that could close another client's socket.
+- **Robustness fixes** in copying, listing and connection handling, with regression tests on the PC
+  (`tests/host`, AddressSanitizer/UBSan) and on the console.
+
+Details, benchmarks and the developer workflow are in **[README-FORK.md](README-FORK.md)**.
+
+> **Status: experimental.** Test builds are run on a real console by hot-loading them over the official plugin;
+> a reboot always returns to the official build. Do not install fork builds with the webMAN updater package.
+> All credit for webMAN MOD goes to aldostools, DeanK and the many contributors listed below.
+
+---
+
 # webMAN MOD - Fork of original webMAN plugin by Deank for Playstation 3
 
 __README IS STILL IN PROGRESS, IF YOU SEE ANY ERROR PLEASE TELL ME OR PUSH A COMMIT__
