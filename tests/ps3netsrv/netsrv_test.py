@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Teste pe loopback pentru ps3netsrv (PC), prin protocolul netiso, ca un client webMAN.
+"""Loopback tests for ps3netsrv (PC), through the netiso protocol, like a webMAN client.
 
-  netsrv_test.py <ps3netsrv> <dir-date> md5      MD5 pentru un ISO și pentru ISO-ul virtual al unui folder
-  netsrv_test.py <ps3netsrv> <dir-date> fd0      fără stdin: închiderea unui ISO virtual nu strică alte socket-uri
-  netsrv_test.py <ps3netsrv> <dir-date> bench <fișier-mare>
-                                                  MB/s și CPU-ul serverului, pe <fișier-mare> și pe ISO-ul virtual
+  netsrv_test.py <ps3netsrv> <data-dir> md5      MD5 of an ISO and of the virtual ISO of a folder
+  netsrv_test.py <ps3netsrv> <data-dir> fd0      without stdin: closing a virtual ISO must not break other sockets
+  netsrv_test.py <ps3netsrv> <data-dir> bench <big-file>
+                                                  MB/s and server CPU, on <big-file> and on the virtual ISOs
 
-<dir-date> e creat la prima rulare (PS3ISO/t.iso, viso/ și viso-mic/ cu 4.000 de fișiere, date aleatoare)
-și refolosit apoi, ca MD5-urile să fie comparabile între build-uri. La bench, <fișier-mare> e legat (hardlink)
-în <dir-date>, deci trebuie să fie pe același sistem de fișiere.
+<data-dir> is created on the first run (PS3ISO/t.iso, viso/ and viso-small/ with 4,000 files, random data)
+and reused afterwards, so the MD5s are comparable between builds. For bench, <big-file> is hard-linked
+into <data-dir>, so it must be on the same filesystem.
 """
 import hashlib
 import os
@@ -19,12 +19,12 @@ import sys
 import time
 
 PORT = 38019
-CHUNK = 65536  # cât cere webMAN la o citire (netclient.h)
+CHUNK = 65536  # what webMAN asks for in one read (netclient.h)
 OPEN_FILE, READ_FILE = 0x1224, 0x1227
 
 
 class Client:
-    # ps3netsrv ține o singură conexiune per IP (main.cpp:2216), deci clienți diferiți vin de la adrese loopback diferite
+    # ps3netsrv keeps one connection per IP (main.cpp:2216), so different clients use different loopback addresses
     def __init__(self, ip="127.0.0.1"):
         self.s = socket.create_connection(("127.0.0.1", PORT), timeout=30, source_address=(ip, 0))
 
@@ -33,7 +33,7 @@ class Client:
         while len(buf) < n:
             b = self.s.recv(n - len(buf))
             if not b:
-                raise ConnectionError("conexiune închisă de server")
+                raise ConnectionError("connection closed by the server")
             buf += b
         return bytes(buf)
 
@@ -47,7 +47,7 @@ class Client:
         self.s.sendall(struct.pack(">HxxIQ", READ_FILE, n, offset))
         (got,) = struct.unpack(">i", self.recv(4))
         if got < 0:
-            raise IOError(f"READ_FILE a întors {got} la offset {offset}")
+            raise IOError(f"READ_FILE returned {got} at offset {offset}")
         return self.recv(got)
 
     def md5(self, path):
@@ -55,9 +55,9 @@ class Client:
         while off < size:
             d = self.read(off, min(CHUNK, size - off))
             if not d:
-                raise IOError(f"citire goală la {off} din {size}")
+                raise IOError(f"empty read at {off} of {size}")
             if off < 0x10000 and path.startswith("/***"):
-                d = fara_date_volum(off, d)
+                d = without_volume_dates(off, d)
             h.update(d); off += len(d)
         return h.hexdigest(), size
 
@@ -65,9 +65,9 @@ class Client:
         self.s.close()
 
 
-def fara_date_volum(off, d):
-    """Golește datele de creare/modificare din descriptorii de volum ISO 9660 (sectoarele 16+): ISO-ul virtual
-    le ia din ceasul serverului, deci altfel MD5-ul s-ar schimba de la un minut la altul."""
+def without_volume_dates(off, d):
+    """Zeroes the creation/modification dates in the ISO 9660 volume descriptors (sectors 16+): the virtual ISO
+    takes them from the server clock, so otherwise the MD5 would change from one minute to the next."""
     d = bytearray(d)
     for sec in range(0x8000, 0x10000, 0x800):
         a, b = max(sec + 813, off), min(sec + 847, off + len(d))
@@ -76,38 +76,38 @@ def fara_date_volum(off, d):
     return bytes(d)
 
 
-def date(d):
-    """Datele de test: un ISO de 48 MB și un folder cu fișiere de dimensiuni diferite pentru ISO-ul virtual."""
-    iso, viso, mic = os.path.join(d, "PS3ISO", "t.iso"), os.path.join(d, "viso"), os.path.join(d, "viso-mic")
+def make_data(d):
+    """Test data: a 48 MB ISO, a folder with files of different sizes, and a folder with many small files."""
+    iso, viso, small = os.path.join(d, "PS3ISO", "t.iso"), os.path.join(d, "viso"), os.path.join(d, "viso-small")
     if not os.path.exists(iso):
         os.makedirs(os.path.dirname(iso)); os.makedirs(os.path.join(viso, "SUB"))
         with open(iso, "wb") as f:
             f.write(os.urandom(48 << 20))
-        for nume, n in [("A.BIN", 3 << 20), ("B.BIN", 1), ("C.BIN", 2048), ("SUB/D.BIN", (17 << 20) + 5)]:
-            with open(os.path.join(viso, nume), "wb") as f:
+        for name, n in [("A.BIN", 3 << 20), ("B.BIN", 1), ("C.BIN", 2048), ("SUB/D.BIN", (17 << 20) + 5)]:
+            with open(os.path.join(viso, name), "wb") as f:
                 f.write(os.urandom(n))
-    if not os.path.exists(mic):
-        # ca un joc JB: mii de fișiere mici, unde VIsoFile redeschide fișierul la fiecare citire
+    if not os.path.exists(small):
+        # like a JB game: thousands of small files, where VIsoFile reopens the file on every read
         for i in range(4000):
-            sub = os.path.join(mic, f"D{i // 500:02d}")
+            sub = os.path.join(small, f"D{i // 500:02d}")
             os.makedirs(sub, exist_ok=True)
             with open(os.path.join(sub, f"F{i:05d}.BIN"), "wb") as f:
                 f.write(os.urandom(16384))
 
 
-def porneste(binar, root, fara_stdin=False):
-    p = subprocess.Popen([binar, root, str(PORT)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+def start(binary, root, no_stdin=False):
+    p = subprocess.Popen([binary, root, str(PORT)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          stdin=subprocess.DEVNULL, close_fds=True,
-                         preexec_fn=(lambda: os.close(0)) if fara_stdin else None)
+                         preexec_fn=(lambda: os.close(0)) if no_stdin else None)
     for _ in range(50):
         try:
-            # de la altă adresă decât clienții: vezi #13 (cursa la reconectarea de la același IP)
+            # from a different address than the clients: see #13 (race on reconnect from the same IP)
             socket.create_connection(("127.0.0.1", PORT), timeout=1, source_address=("127.0.0.3", 0)).close()
             return p
         except OSError:
             time.sleep(0.1)
     p.kill()
-    sys.exit("serverul nu a pornit")
+    sys.exit("the server did not start")
 
 
 def cpu(pid):
@@ -117,9 +117,9 @@ def cpu(pid):
 
 
 def main():
-    binar, d, test = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2]), sys.argv[3]
-    date(d)
-    p = porneste(binar, d, fara_stdin=(test == "fd0"))
+    binary, d, test = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2]), sys.argv[3]
+    make_data(d)
+    p = start(binary, d, no_stdin=(test == "fd0"))
     try:
         if test == "md5":
             c = Client()
@@ -127,15 +127,15 @@ def main():
             print("viso", *c.md5("/***DVD***/viso"))
             c.close()
         elif test == "fd0":
-            # A: ISO virtual, citit până intră într-un fișier (VIsoFile2 face close_file(fd) înainte de open),
-            # apoi /CLOSEFILE (destructorul face încă un close_file(fd)).
+            # A: virtual ISO, read until it enters a file (VIsoFile2 calls close_file(fd) before open),
+            # then /CLOSEFILE (the destructor calls close_file(fd) once more).
             a = Client()
             size = a.open("/***DVD***/viso")
             off = 0
             while off < size:
                 off += len(a.read(off, CHUNK))
             a.open("/CLOSEFILE")
-            # B: o conexiune nouă trebuie să funcționeze în continuare, la fel și A.
+            # B: a new connection must still work, and so must A.
             try:
                 b = Client("127.0.0.2")
                 ok_b = b.open("/PS3ISO/t.iso") == 48 << 20
@@ -147,19 +147,19 @@ def main():
             except OSError as e:
                 ok_a = False; print("A:", e)
             a.close()
-            print("fd0:", "OK" if ok_a and ok_b else "EȘEC", f"(A {'ok' if ok_a else 'stricat'}, B {'ok' if ok_b else 'refuzat'})")
+            print("fd0:", "OK" if ok_a and ok_b else "FAILED", f"(A {'ok' if ok_a else 'broken'}, B {'ok' if ok_b else 'refused'})")
             sys.exit(0 if ok_a and ok_b else 1)
         elif test == "bench":
-            mare = os.path.abspath(sys.argv[4])
-            legatura = os.path.join(d, "mare.bin")
-            if not os.path.exists(legatura):
-                os.link(mare, legatura)
-            for i, (nume, cale) in enumerate([("fișier", "/mare.bin"), ("viso", "/***DVD***/viso"), ("viso-mic", "/***DVD***/viso-mic")]):
+            big = os.path.abspath(sys.argv[4])
+            link = os.path.join(d, "big.bin")
+            if not os.path.exists(link):
+                os.link(big, link)
+            for i, (name, path) in enumerate([("file", "/big.bin"), ("viso", "/***DVD***/viso"), ("viso-small", "/***DVD***/viso-small")]):
                 c = Client(f"127.0.0.{10 + i}")
                 t0, c0 = time.monotonic(), cpu(p.pid)
-                h, size = c.md5(cale)
+                h, size = c.md5(path)
                 dt, dc = time.monotonic() - t0, cpu(p.pid) - c0
-                print(f"{nume:7s} {size / dt / 1e6:8.1f} MB/s  CPU server {dc:6.2f} s  ({size} octeți, md5 {h})")
+                print(f"{name:10s} {size / dt / 1e6:8.1f} MB/s  server CPU {dc:6.2f} s  ({size} bytes, md5 {h})")
                 c.close()
     finally:
         p.kill(); p.wait()

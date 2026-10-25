@@ -1,8 +1,8 @@
-# Zona GALBENĂ (ANALIZA-webMAN-MOD.md, 8.2): se modifică doar cu grijă maximă.
-# Un commit care atinge aceste căi trebuie să aibă secțiunea „Impact low-level” în mesaj.
-# Același format ca PROTECTED_PATHS.txt.
+# AMBER zone (ANALIZA-webMAN-MOD.md, 8.2): modified only with maximum care.
+# A commit touching these paths must have an "Impact low-level" section in its message.
+# Same format as PROTECTED_PATHS.txt.
 
-# Scrieri care pot ajunge în /dev_blind, /dev_flash*
+# Writes that can reach /dev_blind, /dev_flash*
 include/ftp.h
 include/file/file_copy.h
 include/file/file_delete.h
@@ -11,17 +11,17 @@ include/cmd/write_trunc_unzip.h
 include/cmd/rename_swap_move.h
 include/cmd/dev_blind.h
 
-# Parser/dispatch PS3MAPI (doar parsare și autentificare, nu apelurile spre syscall)
+# PS3MAPI parser/dispatch (parsing and authentication only, not the syscall calls)
 include/ps3mapi/ps3mapi_server.h
 
-# Montare (apelează Cobra/syscall8)
+# Mounting (calls Cobra/syscall8)
 include/mount/
 
-# Layout-ul webman_config nu se schimbă
+# The webman_config layout never changes
 include/setup.h
 include/init/wm_config.h
 
-# Flag-uri dezactivate în upstream rămân dezactivate
+# Flags disabled upstream stay disabled
 flags.h
 include/init/flags.h
 flags/

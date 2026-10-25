@@ -1,5 +1,5 @@
-// Mediul minim în care funcțiile extrase din webMAN compilează pe PC.
-// Tipurile urmează ABI-ul PPU folosit de webMAN (vezi types.h), nu cel al PC-ului.
+// Minimal environment in which the functions extracted from webMAN compile on the PC.
+// The types follow the PPU ABI used by webMAN (see types.h), not the PC one.
 #pragma once
 
 #include <stdbool.h>
@@ -22,9 +22,9 @@ typedef int64_t  s64;
 #define MIN(a, b)	((a) <= (b) ? (a) : (b))
 #define NONE		-1
 
-#include "gen/consts.h"   // MAX_LINE_LEN, STD_PATH_LEN, MAX_PATH_LEN din include/init/paths.h
+#include "gen/consts.h"   // MAX_LINE_LEN, STD_PATH_LEN, MAX_PATH_LEN from include/init/paths.h
 
-// Funcții VSH/FS de care depinde parsePath; în harness nu ating nimic.
+// VSH/FS functions parsePath depends on; in the harness they touch nothing.
 static void mount_device(const char *a, const char *b, const char *c) { (void)a; (void)b; (void)c; }
 static void filepath_check(char *f) { (void)f; }
 static void check_path_alias(char *p) { (void)p; }

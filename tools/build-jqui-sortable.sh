@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Construiește jquery-ui.min.js doar cu sortable (W4): webMAN folosește din jQuery UI numai $(...).sortable()
-# (games_html.h, sman.htm, links.html). Pachetul complet are 254 KB, acesta ~39 KB.
+# Builds jquery-ui.min.js with sortable only (W4): webMAN uses nothing from jQuery UI except $(...).sortable()
+# (games_html.h, sman.htm, links.html). The full bundle is 254 KB, this one ~39 KB.
 #
-#   tools/build-jqui-sortable.sh [ieșire]   (implicit _Projects_/updater/pkgfiles/USRDIR/html/jquery-ui.min.js)
+#   tools/build-jqui-sortable.sh [output]   (default _Projects_/updater/pkgfiles/USRDIR/html/jquery-ui.min.js)
 #
-# Cere esbuild în PATH. Sursa jQuery UI vine din registry-ul npm, verificată cu SHA-1 din metadatele lui.
+# Requires esbuild in PATH. The jQuery UI source comes from the npm registry, checked against the SHA-1 from its metadata.
 set -euo pipefail
 
 VERSION=1.14.2
@@ -21,11 +21,11 @@ echo "$SHA1  $tgz" | sha1sum -c --quiet
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 tar -xzf "$tgz" -C "$tmp"
 ui=$tmp/package/ui
-# Ordinea dependențelor din define([...]) ale fiecărui modul
+# Dependency order, from each module's define([...])
 {
-	printf '/*! jQuery UI v%s, doar sortable (version, data, scroll-parent, widget, mouse, sortable) | jquery.org/license */\n' "$VERSION"
+	printf '/*! jQuery UI v%s, sortable only (version, data, scroll-parent, widget, mouse, sortable) | jquery.org/license */\n' "$VERSION"
 	cat "$ui/version.js" "$ui/data.js" "$ui/scroll-parent.js" "$ui/widget.js" "$ui/widgets/mouse.js" "$ui/widgets/sortable.js"
 } > "$tmp/sortable.js"
-# es5: browserul PS3 e vechi; esbuild refuză dacă ar trebui să emită sintaxă mai nouă
+# es5: the PS3 browser is old; esbuild refuses if it would have to emit newer syntax
 esbuild "$tmp/sortable.js" --minify --target=es5 --log-level=warning > "$out"
-echo "$out: $(stat -c %s "$out") octeți"
+echo "$out: $(stat -c %s "$out") bytes"

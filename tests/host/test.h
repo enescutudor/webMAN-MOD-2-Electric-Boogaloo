@@ -1,6 +1,6 @@
-// Runner minimal: fiecare test rulează într-un proces separat (vezi run.sh), ca un abort ASan să pice doar testul lui.
-//   ./t --list     numele testelor
-//   ./t <nume>     rulează un test; exit 0 = trecut
+// Minimal runner: each test runs in its own process (see run.sh), so an ASan abort fails only that test.
+//   ./t --list     test names
+//   ./t <name>     run one test; exit 0 = passed
 #pragma once
 
 #include <stdio.h>
@@ -27,6 +27,6 @@ int main(int argc, char **argv)
 	}
 	for(int i = 0; argc == 2 && i < n_tests; i++)
 		if(!strcmp(argv[1], tests[i].name)) { tests[i].fn(); return 0; }
-	fprintf(stderr, "folosire: %s --list | <test>\n", argv[0]);
+	fprintf(stderr, "usage: %s --list | <test>\n", argv[0]);
 	return 2;
 }

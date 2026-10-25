@@ -1,7 +1,7 @@
 <!doctype html>
-<!-- Test pentru jQuery UI sortable, ca în lista de jocuri (games_html.h: $("#mg").sortable()).
-     Se copiază lângă jquery.min.js și jquery-ui.min.js și se randează cu firefox --headless --screenshot.
-     Rezultatul apare cu litere mari: PASS sau FAIL și motivul. -->
+<!-- Test for jQuery UI sortable, as used by the game list (games_html.h: $("#mg").sortable()).
+     Copy it next to jquery.min.js and jquery-ui.min.js and render it with firefox --headless --screenshot.
+     The result shows in large letters: PASS or FAIL and the reason. -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -9,38 +9,38 @@
 <script src="jquery-ui.min.js"></script>
 <style>
 	#mg div { width: 200px; height: 40px; margin: 4px; background: #ccc; }
-	#rez { font: bold 64px sans-serif; }
+	#res { font: bold 64px sans-serif; }
 </style>
 </head>
 <body>
 <div id="mg"><div id="a">A</div><div id="b">B</div><div id="c">C</div></div>
-<div id="rez">...</div>
+<div id="res">...</div>
 <script>
-function rezultat(ok, motiv) {
-	var r = document.getElementById("rez");
-	r.textContent = (ok ? "PASS " : "FAIL ") + motiv;
+function result(ok, reason) {
+	var r = document.getElementById("res");
+	r.textContent = (ok ? "PASS " : "FAIL ") + reason;
 	r.style.color = ok ? "green" : "red";
 }
-function mouse(tip, el, x, y) {
+function mouse(type, el, x, y) {
 	var e = document.createEvent("MouseEvents");
-	e.initMouseEvent(tip, true, true, window, 0, x, y, x, y, false, false, false, false, 0, null);
+	e.initMouseEvent(type, true, true, window, 0, x, y, x, y, false, false, false, false, 0, null);
 	el.dispatchEvent(e);
 }
 try {
-	if (!$.fn.sortable) throw new Error("$.fn.sortable lipsește");
+	if (!$.fn.sortable) throw new Error("$.fn.sortable is missing");
 	$("#mg").sortable();
-	if (!$("#mg").hasClass("ui-sortable")) throw new Error("sortable nu s-a inițializat");
-	// trage A sub C
+	if (!$("#mg").hasClass("ui-sortable")) throw new Error("sortable did not initialize");
+	// drag A below C
 	var a = document.getElementById("a"), c = document.getElementById("c");
 	var ra = a.getBoundingClientRect(), rc = c.getBoundingClientRect();
 	var x = ra.left + 10, y0 = ra.top + 10, y1 = rc.bottom - 2;
 	mouse("mousedown", a, x, y0);
 	for (var y = y0; y <= y1; y += 5) mouse("mousemove", document, x, y);
 	mouse("mouseup", document, x, y1);
-	var ordine = $("#mg").children().map(function () { return this.id; }).get().join("");
-	rezultat(ordine === "bca", "ordine " + ordine + ", jQuery UI " + $.ui.version);
+	var order = $("#mg").children().map(function () { return this.id; }).get().join("");
+	result(order === "bca", "order " + order + ", jQuery UI " + $.ui.version);
 } catch (e) {
-	rezultat(false, e.message);
+	result(false, e.message);
 }
 </script>
 </body>

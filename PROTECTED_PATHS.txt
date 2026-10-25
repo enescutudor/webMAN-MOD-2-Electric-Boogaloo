@@ -1,20 +1,20 @@
-# Zona ROȘIE (ANALIZA-webMAN-MOD.md, 8.1): fișiere care NU se modifică în fork.
-# Se preiau doar neschimbate, prin merge din upstream.
-# O linie = o cale exactă; o cale terminată în / = tot directorul.
-# Verificat de tools/check-protected.sh și de hook-ul pre-commit.
+# RED zone (ANALIZA-webMAN-MOD.md, 8.1): files that are NEVER modified in the fork.
+# They only come in unchanged, through merges from upstream.
+# One line = one exact path; a path ending in / = the whole directory.
+# Checked by tools/check-protected.sh and the pre-commit hook.
 
-# Flash ROS, EPROM
+# ROS flash, EPROM
 include/feat/rospatch.h
 include/cmd/ros.h
 include/cmd/recovery.h
 
-# Kernel Cobra, acces raw la storage
+# Cobra kernel, raw storage access
 cobra/
 
-# Offset-uri LV2 per firmware
+# LV2 offsets per firmware
 include/init/firmware.h
 
-# Peek/poke LV1/LV2, payload-uri, stealth, wrappere syscall8
+# LV1/LV2 peek/poke, payloads, stealth, syscall8 wrappers
 include/ps3mapi/peek_poke.h
 include/ps3mapi/debug_mem.h
 include/ps3mapi/stealth.h
@@ -26,20 +26,20 @@ include/ps3mapi/ps3mapi.h
 include/feat/idps.h
 include/cmd/consoleid.h
 
-# Superblock UFS în LV2
+# UFS superblock in LV2
 include/file/hdd_unlock_space.h
 
-# Registrul de sistem
+# System registry
 include/feat/xregistry.h
 
-# Ventilator, SYSCON
+# Fan, SYSCON
 include/poll/fancontrol.h
 include/poll/fancontrol2.h
 
-# Poke-uri LV1/LV2
+# LV1/LV2 pokes
 include/feat/clock.h
 include/mount/ps2_disc.h
 include/mount/mount_noncobra.h
 
-# Cod de boot/kernel
+# Boot/kernel code
 _Projects_/boot_mamba/
