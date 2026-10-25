@@ -4,6 +4,18 @@
 #include "gen/webman.inc"
 #include "test.h"
 
+// Mock send() for fork/ftp_list.h: records every chunk; fail_after makes the n-th call fail.
+static char sent[65536]; static size_t sent_len; static int sends, fail_after = -1;
+static int send(int s, const void *buf, size_t n, int flags)
+{
+	(void)s; (void)flags;
+	if(sends++ == fail_after) return -1;
+	CHECK(n <= 4096);
+	memcpy(sent + sent_len, buf, n); sent_len += n;
+	return (int)n;
+}
+#include "../../include/fork/ftp_list.h"
+
 // Heap copy of exactly `size` bytes, so ASan catches any write or read outside it.
 static char *exact(size_t size) { return calloc(1, size); }
 
@@ -230,4 +242,53 @@ TEST(http_cache_control_paths)
 	CHECK_STR(http_cache_control("/dev_hdd0/xmlhost/game_plugin/mygames.xml"), "no-cache");
 	CHECK_STR(http_cache_control("/dev_hdd0/game/BLES80608/USRDIR/covers/BCES01007.JPG"), "no-cache");
 	CHECK_STR(http_cache_control("/dev_usb000/x/jquery.min.js"), "no-cache");
+}
+
+// ---------- list_send / list_flush (fork/ftp_list.h) ----------
+
+// Sends `count` lines of `size` bytes through a list buffer (or without one) and checks the bytes on the wire.
+static void list_roundtrip(int count, int size, bool buffered, int expected_sends)
+{
+	char expected[65536]; size_t expected_len = 0;
+	list_buffer lb = {buffered ? malloc(LIST_BUFFER_SIZE) : NULL, 0};
+	sent_len = 0; sends = 0; fail_after = -1;
+	for(int i = 0; i < count; i++)
+	{
+		char line[LIST_LINE_SIZE];
+		memset(line, 'a' + i % 26, size - 2); memcpy(line + size - 2, "\r\n", 2);
+		CHECK(list_send(&lb, 3, line, size) == size);
+		memcpy(expected + expected_len, line, size); expected_len += size;
+	}
+	list_flush(&lb, 3); free(lb.buf);
+	CHECK(sent_len == expected_len && !memcmp(sent, expected, expected_len));
+	if(expected_sends >= 0) CHECK(sends == expected_sends);
+}
+
+TEST(list_empty) { list_roundtrip(0, 0, true, 0); }
+TEST(list_one_line) { list_roundtrip(1, 60, true, 1); }
+TEST(list_many_lines) { list_roundtrip(500, 70, true, 9); }          // 35,000 bytes in 4,096-byte chunks
+TEST(list_exactly_full) { list_roundtrip(64, 64, true, 1); }         // 4,096 bytes: one send
+TEST(list_long_lines) { list_roundtrip(40, LIST_LINE_SIZE, true, -1); }
+TEST(list_unbuffered_fallback) { list_roundtrip(10, 50, false, 10); } // malloc failed: one send per line, as upstream
+
+TEST(list_send_error)
+{
+	list_buffer lb = {malloc(LIST_BUFFER_SIZE), 0};
+	char line[100]; memset(line, 'x', sizeof(line));
+	sent_len = 0; sends = 0; fail_after = 0;
+	int ret = 0;
+	for(int i = 0; i < 100 && ret >= 0; i++) ret = list_send(&lb, 3, line, sizeof(line));
+	CHECK(ret < 0);   // the first flush fails and the error reaches the listing loop
+	free(lb.buf);
+}
+
+// #16: the longest MLSD line (format from ftp.h) with a 255-char name fits in LIST_LINE_SIZE, not in FTP_RECV_SIZE.
+TEST(list_longest_mlsd_line)
+{
+	char name[256]; memset(name, 'n', 255); name[255] = '\0';
+	char line[1024];
+	int len = sprintf(line, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+					  " ", "c", "file", "e", 18446744073709551615ULL, 2026, 12, 31, 23, 59, 59, 7, 7, 7, name);
+	CHECK(len + 1 <= LIST_LINE_SIZE);
+	CHECK(len + 1 > STD_PATH_LEN + 20);  // FTP_RECV_SIZE: the old buffer was too small
 }

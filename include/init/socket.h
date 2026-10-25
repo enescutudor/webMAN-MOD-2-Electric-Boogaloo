@@ -34,6 +34,7 @@ static int connect_to_server_ex(const char *server_ip, u16 port, u8 rcv_timeout)
 
 		if((hp = gethostbyname(server_ip)) == NULL)
 		{
+			socketclose(s); // fork: the socket leaked on this error path
 			return FAILED;
 		}
 
@@ -51,6 +52,7 @@ static int connect_to_server_ex(const char *server_ip, u16 port, u8 rcv_timeout)
 
 	if(connect(s, (struct sockaddr *)&sin, sin_len) < 0)
 	{
+		socketclose(s); // fork: the socket leaked on this error path
 		return FAILED;
 	}
 

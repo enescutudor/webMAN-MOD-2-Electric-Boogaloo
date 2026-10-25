@@ -1293,7 +1293,7 @@ static void ps3mapi_thread(__attribute__((unused)) u64 arg)
 		{
 			while(working && ps3mapi_working)
 			{
-				sys_ppu_thread_usleep(100000);
+				sys_ppu_thread_usleep(sys_admin ? 100000 : 500000); // fork (B2): 500 ms when accept() is disabled
 				if (!working || !ps3mapi_working) goto end;
 
 				int conn_s_ps3mapi;

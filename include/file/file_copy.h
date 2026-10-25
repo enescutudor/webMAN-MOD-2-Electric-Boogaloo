@@ -221,7 +221,7 @@ int64_t file_copy(const char *file1, char *file2)
 	{
 		chunk_size = is_ntfs1 || (current_size <= _64KB_) ? _64KB_ : _128KB_;
 		sysmem = sys_mem_allocate(chunk_size);
-		if(!sysmem) {chunk_size = _64KB_; sys_mem_allocate(chunk_size);}
+		if(!sysmem) {chunk_size = _64KB_; sysmem = sys_mem_allocate(chunk_size);} // fork (F0): keep the fallback buffer
 	}
 
 	if(sysmem)

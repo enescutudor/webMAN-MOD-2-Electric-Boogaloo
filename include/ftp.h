@@ -930,6 +930,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							CellFsDirent entry_s; u64 read_e; // list root folder using the slower readdir
 							char *entry_name = (is_root) ? entry_s.d_name : entry.entry_name.d_name;
 							u16 slen;
+							char line[LIST_LINE_SIZE]; list_buffer lb = {malloc(LIST_BUFFER_SIZE), 0}; // fork (F1, #16): lines no longer formatted in buffer[FTP_RECV_SIZE]
 
 							while(working && ftp_working)
 							{
@@ -957,7 +958,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									if(u) sprintf(entry_name, "dev_%s:", mounts[u-1].name);
 								#endif
 									if(nolist)
-										slen = sprintf(buffer, "%s\015\012", entry_name);
+										slen = sprintf(line, "%s\015\012", entry_name);
 									else
 									{
 										if(is_root && IS(entry_name, "host_root")) continue;
@@ -982,7 +983,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 											if(IS(entry_name, ".."))	*dirtype =  'p'; else
 																		*dirtype = '\0';
 
-											slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+											slen = sprintf(line, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 													is_MLSD ? "" : " ",
 													dirtype,
 													( (mode & S_IFDIR) != 0) ? "dir" : "file",
@@ -993,7 +994,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 													entry_name);
 										}
 										else
-											slen = sprintf(buffer, "%c%c%c%c%c%c%c%c%c%c 1 root  root  %13llu %s %02i %02i:%02i %s\r\n",
+											slen = sprintf(line, "%c%c%c%c%c%c%c%c%c%c 1 root  root  %13llu %s %02i %02i:%02i %s\r\n",
 													(mode & S_IFDIR) ? 'd' : '-',
 													(mode & S_IRUSR) ? 'r' : '-',
 													(mode & S_IWUSR) ? 'w' : '-',
@@ -1007,11 +1008,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 													(unsigned long long)entry.attribute.st_size, smonth[rDate.month - 1], rDate.day,
 													rDate.hour, rDate.minute, entry_name);
 									}
-									if(send(is_MLST ? conn_s_ftp : data_s, buffer, slen, 0) < 0) break;
+									if(list_send(&lb, is_MLST ? conn_s_ftp : data_s, line, slen) < 0) break;
 								#ifdef USE_NTFS
 								}
 								#endif
 							}
+
+							list_flush(&lb, is_MLST ? conn_s_ftp : data_s); free(lb.buf);
 
 							#ifdef USE_NTFS
 							if(is_ntfs)
@@ -1556,7 +1559,7 @@ relisten:
 	{
 		while(ftp_working)
 		{
-			sys_ppu_thread_usleep(ftp_active ? 5000 : 50000);
+			sys_ppu_thread_usleep(!sys_admin ? 500000 : ftp_active ? 5000 : 50000); // fork (B2): 500 ms when accept() is disabled
 			if(!working || !ftp_working) break;
 
 			if(ftp_active > MAX_FTP_THREADS) continue;

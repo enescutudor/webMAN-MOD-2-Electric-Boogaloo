@@ -463,6 +463,7 @@ static u8 mount_unk = EMU_OFF;
 #include "include/feat/clock.h"
 #include "include/feat/script.h"
 
+#include "include/fork/ftp_list.h"
 #include "include/ftp.h"
 
 #include "include/ps3mapi/debug_mem.h"

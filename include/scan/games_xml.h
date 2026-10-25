@@ -1644,7 +1644,7 @@ static void refresh_xml(char *msg)
 
 	// refresh XML
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, start_www, REFRESH_CONTENT, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, start_www, REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD); // fork (B3): was THREAD_PRIO_HIGH
 
 	// backup / restore act.bak -> act.dat
 	backup_act_dat();
