@@ -671,7 +671,7 @@ static bool scan_mygames_xml(u64 conn_s_p)
 		if(is_pressed(CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)) return true;
 
 		// start a new thread for refresh xml content at start up
-		if(!webman_config->refr || not_exists(MY_GAMES_XML))
+		if((!webman_config->refr || not_exists(MY_GAMES_XML)) && !bootscan_unchanged()) // fork (G9): opt-in, see fork/boot_scan.h
 		{
 			sys_ppu_thread_t t_id;
 			sys_ppu_thread_create(&t_id, start_www, REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
@@ -1618,7 +1618,12 @@ static void update_xml_thread(u64 conn_s_p)
 	if(IS_ON_XMB)
 		wait_for_xmb(); // wait for explore_plugin
 
+	u64 sig = 0, mtime = 0; // fork (G9)
+	if(conn_s_p != START_DAEMON) {sig = bootscan_signature(); mtime = bootscan_mtime();}
+
 	if(scan_mygames_xml(conn_s_p)) mount_autoboot();
+
+	if(conn_s_p != START_DAEMON) bootscan_save(sig, mtime);
 
 	refreshing_xml = 0;
 	sys_ppu_thread_exit(0);

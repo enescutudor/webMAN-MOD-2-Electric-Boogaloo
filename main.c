@@ -479,6 +479,7 @@ static u8 mount_unk = EMU_OFF;
 #include "include/scan/snd0.h"
 #include "include/fork/net_guard.h"
 #include "include/scan/games_html.h"
+#include "include/fork/boot_scan.h"
 #include "include/scan/games_xml.h"
 #ifdef USE_NTFS
 #include "include/fork/ntfs_cache.h"
