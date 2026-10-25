@@ -23,6 +23,8 @@ behaviour identical to upstream, and fixes the bugs found along the way.
 - **Web UI:** browser caching (ETag/304) for the game list, covers and UI assets: a second visit of the game
   list transfers ~35 KB instead of ~6.7 MB; lazy-loaded covers; jQuery UI reduced to the one widget used
   (254 KB -> 39 KB); correct MIME type for JavaScript; CORS only for an origin you allow.
+- **HTTP downloads:** byte ranges (resume interrupted downloads, seek in media); clients that stop reading no
+  longer hold a server thread forever.
 - **FTP:** directory listings sent in 4 KB chunks (~18% faster on large folders, same bytes on the wire).
 - **Network games:** a game keeps running when its connection to ps3netsrv is lost (server restart, network
   glitch): the netiso plugin reconnects and retries; refreshing the game list while playing no longer cuts the
