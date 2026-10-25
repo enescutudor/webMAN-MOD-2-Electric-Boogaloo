@@ -25,3 +25,7 @@ include/init/wm_config.h
 flags.h
 include/init/flags.h
 flags/
+
+# Mount plugins loaded by webMAN from /dev_hdd0/tmp/wm_res (D11): they answer Cobra's disc read events
+_Projects_/netiso/
+_Projects_/rawseciso/

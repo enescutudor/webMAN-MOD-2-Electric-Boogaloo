@@ -24,8 +24,9 @@ behaviour identical to upstream, and fixes the bugs found along the way.
   list transfers ~35 KB instead of ~6.7 MB; lazy-loaded covers; jQuery UI reduced to the one widget used
   (254 KB -> 39 KB); correct MIME type for JavaScript; CORS only for an origin you allow.
 - **FTP:** directory listings sent in 4 KB chunks (~18% faster on large folders, same bytes on the wire).
-- **Network games:** refreshing the game list while playing no longer cuts the running game's connection
-  to ps3netsrv (C++ server).
+- **Network games:** a game keeps running when its connection to ps3netsrv is lost (server restart, network
+  glitch): the netiso plugin reconnects and retries; refreshing the game list while playing no longer cuts the
+  game's connection; sequential reads are prefetched.
 - **ps3netsrv (PC side):** optimized builds (`-O2`) and the open-file virtual ISO reader on Linux/macOS, with
   a fix for a descriptor bug that could close another client's socket.
 - **Robustness fixes** in copying, listing and connection handling, with regression tests on the PC

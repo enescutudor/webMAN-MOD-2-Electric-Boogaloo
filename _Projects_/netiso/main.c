@@ -203,6 +203,8 @@ static void memcpy64(void *dst, void *src, int n)
 	}
 }
 
+static void set_socket_timeouts(int s); // fork (S11, 1b.2): reconnect.h
+
 static int connect_to_server(char *server, u16 port)
 {
 	struct sockaddr_in sin;
@@ -236,9 +238,12 @@ static int connect_to_server(char *server, u16 port)
 		return FAILED;
 	}
 
+	set_socket_timeouts(s); // fork (S11, 1b.2)
+
 	if(connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
 	{
 		//DPRINTF("connect() failed (errno=%d)\n", sys_net_errno);
+		socketclose(s);
 		return FAILED;
 	}
 
@@ -310,6 +315,9 @@ static int read_remote_file_critical(u64 offset, void *buf, u32 size)
 	return 0;
 }
 
+#include "prefetch.h"
+#include "reconnect.h"
+
 static int process_read_iso_cmd(u8 *buf, u64 offset, u32 size)
 {
 	u64 read_end;
@@ -331,7 +339,7 @@ static int process_read_iso_cmd(u8 *buf, u64 offset, u32 size)
 		size = discsize - offset;
 	}
 
-	return read_remote_file_critical(offset, buf, size);
+	return is_cd2352 ? read_remote_file_critical(offset, buf, size) : read_iso_prefetch(offset, buf, size); // fork (S11, N1)
 }
 
 static int process_read_cd_2048_cmd(u8 *buf, u32 start_sector, u32 sector_count)
@@ -576,6 +584,8 @@ static void netiso_thread(u64 arg)
 		u64 offset = event.data2;
 		u32 size = event.data3&0xFFFFFFFF;
 
+		for(int attempt = 0;; attempt++) // fork (S11, 1b.2): one retry on a new connection
+		{
 		switch(event.data1)
 		{
 			case CMD_READ_ISO:
@@ -596,6 +606,8 @@ static void netiso_thread(u64 arg)
 				ret = process_read_cd_2352_cmd(buf, offset/cd_sec_size, size/cd_sec_size);
 			}
 			break;
+		}
+		if((ret == 0) || attempt || !working || !netiso_reconnect(args)) break;
 		}
 
 		ret = sys_event_port_send(result_port, ret, 0, 0);

@@ -30,6 +30,9 @@ New code goes in `include/fork/`, hooked into upstream files with one-line chang
 | `ftp_list.h` | buffered FTP LIST/MLSD/NLST |
 | `net_guard.h` | no scan of the network server of the running game |
 
+The mount plugin netiso.sprx (`_Projects_/netiso`, amber zone) has its own fork files: `prefetch.h` (read-ahead for
+sequential ISO reads) and `reconnect.h` (timeouts, reconnection and one retry when the connection to ps3netsrv is lost).
+
 The fork's own options live in `/dev_hdd0/tmp/wmfork.cfg` (one `key=value` per line, never in `webman_config`):
 `cors=<origin>` allows that origin to call webMAN from a browser.
 
@@ -41,6 +44,7 @@ With the Cell SDK (`CELL_SDK` set, `ppu-lv2-*` in `PATH`) and `scetool` in `PATH
 ./_Make.sh                      # the default edition (Full); stops if make fails
 tools/build-matrix.sh build/m   # Full, Lite, non-Cobra and Rebug PS3MAPI, in temporary copies (flags.h untouched)
 tools/build-jqui-sortable.sh    # rebuilds the sortable-only jquery-ui.min.js (needs esbuild)
+tools/build-plugins.sh          # netiso.sprx and raw_iso.sprx (loaded by webMAN from /dev_hdd0/tmp/wm_res)
 ```
 
 ps3netsrv (PC): `make -f Makefile.linux` in `_Projects_/ps3netsrv` (now `-O2`, `VIsoFile2`).
@@ -71,3 +75,5 @@ always returns to the official build.
 | FTP LIST of 5,000 files | 4.2-4.5 s | 3.4-3.65 s |
 | HTTP GET | 32.1 MB/s | unchanged |
 | In-game game list, first visit | 2.23 s | 2.30 s (within noise; the 5 ms pause per file is kept in-game) |
+| Network game read (1.1 GB file, netiso) | 19.4 MB/s | 20.6 MB/s |
+| Game reads after the server restarts mid-game | 0 MB (data source lost) | continues (~100 MB in 40 s) |
