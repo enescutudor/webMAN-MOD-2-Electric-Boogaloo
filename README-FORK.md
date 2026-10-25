@@ -53,11 +53,12 @@ ps3netsrv (PC): `make -f Makefile.linux` in `_Projects_/ps3netsrv` (now `-O2`, `
 
 ```sh
 make -C tests/host test                                    # PC harness: gcc + ASan/UBSan (+ pthreads)
-python3 tests/ps3netsrv/netsrv_test.py <ps3netsrv> <dir> md5|fd0|bench <big-file>
+python3 tests/ps3netsrv/netsrv_test.py <ps3netsrv> <dir> md5|fd0|small|traversal|bench <big-file>
 ```
 
 - `tests/host` extracts the pure functions from the real sources on every run, so it always tests the current
-  code. It also covers the fork's own modules (HTTP cache helpers, FTP list buffer).
+  code (38 checks). It also covers the fork's own modules: HTTP cache/range helpers, FTP list buffer, the
+  system-path and CSRF-origin helpers, and the HTML-escape and buffer-bound fixes.
 - Tests listed in `tests/host/known-bugs.txt` reproduce known upstream bugs that are not fixed yet and are
   expected to fail (XFAIL); when a fix makes one pass, the suite asks for it to be removed from the list.
 - `tests/web/sortable.html` checks the game list drag & drop in a headless browser.
@@ -72,8 +73,33 @@ always returns to the official build.
 |---|---|---|
 | Game list, first visit | 2.11 s, 6.76 MB | 1.68 s |
 | Game list, second visit | 2.10 s, 6.76 MB | ~1.0 s, ~35 KB |
+| `/refresh.ps3` game list scan (82 net games) | 3.9 s | 2.2 s |
+| `/stat.ps3` of 20,000 files | 14.1-14.6 s | 6.9-7.5 s |
+| Wildcard listing of 20,000 files | 57-62 s | ~7.0 s |
 | FTP LIST of 5,000 files | 4.2-4.5 s | 3.4-3.65 s |
+| FTP 200 small-file transfers (FileZilla-style) | 10.8 s | 2.3 s |
 | HTTP GET | 32.1 MB/s | unchanged |
 | In-game game list, first visit | 2.23 s | 2.30 s (within noise; the 5 ms pause per file is kept in-game) |
 | Network game read (1.1 GB file, netiso) | 19.4 MB/s | 20.6 MB/s |
 | Game reads after the server restarts mid-game | 0 MB (data source lost) | continues (~100 MB in 40 s) |
+
+Game list scans and file listings/copies produce output identical to upstream (verified with `diff` on the
+XMB XML and the HTML pages, and MD5 on copies); only the timing changes.
+
+## Security
+
+The web, FTP, netiso and PS3MAPI services are reachable from the local network, so the fork hardens them while
+keeping existing clients (the file manager, FileZilla, an SFTP relay, PS3 Manager API) working:
+
+- **ps3netsrv (PC):** rejects every `..` path component (path traversal), warns at startup when no IP allow-list
+  is set, and has a read-only build target (`make -f Makefile.linux ro`). A loopback regression test
+  (`tests/ps3netsrv/netsrv_test.py traversal`) proves the escape on upstream and its absence on the fork.
+- **Console:** bounds/terminators on the paths that parse request lines, file names from a network server,
+  `.cue` files, PARAM.SFO titles and popup URLs; HTML pages escape special characters in titles.
+- **CSRF:** state-changing web commands are refused for cross-site browser requests (by `Origin`/`Referer`);
+  requests with neither header, and localhost, are never restricted.
+- **FTP:** the data connection is bound to the control client's IP, and failed `PASS` attempts are throttled.
+- **PS3MAPI:** optional IP allow-list via `wmfork.cfg` (`ps3mapi_allow=`), off by default.
+
+localhost (`127.*`) is exempt from every access restriction above. Optional switches live in
+`/dev_hdd0/tmp/wmfork.cfg` (`cors=`, `bootscan=fast`, `ps3mapi_allow=`); nothing is enabled without it.

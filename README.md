@@ -20,19 +20,44 @@ behaviour identical to upstream, and fixes the bugs found along the way.
 - **Small diffs, new code in new files** (`include/fork/`), so upstream updates keep merging cleanly.
 
 ### Changes so far
+
+Performance (menus / tools; in-game behaviour kept identical to upstream):
 - **Web UI:** browser caching (ETag/304) for the game list, covers and UI assets: a second visit of the game
   list transfers ~35 KB instead of ~6.7 MB; lazy-loaded covers; jQuery UI reduced to the one widget used
-  (254 KB -> 39 KB); correct MIME type for JavaScript; CORS only for an origin you allow.
+  (254 KB -> 39 KB); correct MIME type for JavaScript.
 - **HTTP downloads:** byte ranges (resume interrupted downloads, seek in media); clients that stop reading no
   longer hold a server thread forever.
-- **FTP:** directory listings sent in 4 KB chunks (~18% faster on large folders, same bytes on the wire).
+- **Game list scan:** `/refresh.ps3` dropped from ~3.9 s to ~2.2 s (no Nagle delay on the ps3netsrv requests,
+  one-pass NTFS cache cleanup), with a game list identical to upstream.
+- **File tools:** `/stat.ps3` and wildcard listings are several times faster on large trees, and the directory
+  listing a file manager / FileZilla walk produces is unchanged; FTP directory listings sent in 4 KB chunks.
 - **Network games:** a game keeps running when its connection to ps3netsrv is lost (server restart, network
   glitch): the netiso plugin reconnects and retries; refreshing the game list while playing no longer cuts the
   game's connection; sequential reads are prefetched.
 - **ps3netsrv (PC side):** optimized builds (`-O2`) and the open-file virtual ISO reader on Linux/macOS, with
   a fix for a descriptor bug that could close another client's socket.
-- **Robustness fixes** in copying, listing and connection handling, with regression tests on the PC
-  (`tests/host`, AddressSanitizer/UBSan) and on the console.
+- **Optional fast boot scan** (off by default): skips the game scan at startup when nothing in the content
+  folders has changed.
+
+Correctness & robustness:
+- A copy that fails part-way (e.g. the disk fills up) no longer reports success, and a move no longer deletes
+  the source after a failed copy; joining split files (`.666xx`) no longer truncates silently.
+- Fixes in copying, listing, `.cue` parsing, title handling and connection handling, with regression tests on
+  the PC (`tests/host`, AddressSanitizer/UBSan) and on the console.
+
+Security (these services are reachable from the local network):
+- **ps3netsrv (PC side):** a path-traversal flaw that let any device on the network read or write files outside
+  the shared folder is fixed; the server now warns at startup when no IP allow-list is set, and ships a
+  read-only build target.
+- **Console:** several memory-safety issues reachable over the web/FTP services or from a malicious
+  file-server are fixed (bounds and terminators added), and the game list / file pages now escape special
+  characters in titles.
+- **CSRF:** state-changing web commands (delete, copy, write, poke, PS3MAPI) are refused when a browser issues
+  them from another site; requests with no `Origin`/`Referer` (curl, apps, the SFTP relay) and localhost are
+  unaffected.
+- **FTP:** the data connection is tied to the control client's IP (no bounce/hijack) and password guessing is
+  slowed; the existing login behaviour is unchanged.
+- **PS3MAPI:** an optional IP allow-list (off by default).
 
 Details, benchmarks and the developer workflow are in **[README-FORK.md](README-FORK.md)**.
 
