@@ -239,6 +239,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	u8 connactive = 1;			// whether the ftp connection is active or not
 	u8 dataactive = 0;			// prevent the data connection from being closed at the end of the loop
 	u8 loggedin = 0;			// whether the user is logged in or not
+	u8 pass_tries = 0;			// fork (S19, #5): failed PASS attempts on this connection
 
 	char cwd[STD_PATH_LEN];	// Current Working Directory
 	u64 rest = 0;			// for resuming file transfers
@@ -806,6 +807,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							char ipaddr[16];
 							sprintf(ipaddr, "%s.%s.%s.%s", data[0], data[1], data[2], data[3]);
 
+							// fork (S19): only connect back to the control client's own IP (no FTP bounce). localhost is exempt.
+							if(!IS(ipaddr, remote_ip) && !islike(remote_ip, "127."))
+							{
+								send_ftp_error_501(conn_s_ftp); // refuse PORT to a different host
+							}
+							else
+							{
 							data_s = connect_to_server(ipaddr, getPort(val(data[4]), val(data[5])));
 
 							if(data_s >= 0)
@@ -817,6 +825,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							{
 								ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
 							}
+							} // fork (S19): close the PORT target-IP check
 						}
 						else
 						{
@@ -859,8 +868,16 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							sprintf(pasv_output, "227 Entering Passive Mode (%s,%i,%i)\r\n", ip_address, p1x, p2x);
 							ssend(conn_s_ftp, pasv_output);
 
-							if((data_s = accept(pasv_s, NULL, NULL)) >= 0)
+							struct sockaddr_in pasv_peer; socklen_t pasv_plen = sizeof(pasv_peer);
+							if((data_s = accept(pasv_s, (struct sockaddr *)&pasv_peer, &pasv_plen)) >= 0)
 							{
+								// fork (S19): the data connection must come from the control client (no PASV hijack). localhost exempt.
+								if((pasv_peer.sin_addr.s_addr != conn_info.remote_adr.s_addr) && !islike(remote_ip, "127."))
+								{
+									sclose(&data_s); data_s = NONE; sclose(&pasv_s); pasv_s = NONE;
+									continue; // try another port / wait for the right peer
+								}
+
 								setsockopt(pasv_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 								dataactive = 1; break;
@@ -1489,10 +1506,17 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if((webman_config->ftp_password[0] == '\0') || IS(pwd, param))
 					{
 						ssend(conn_s_ftp, FTP_OK_230);		// User logged in, proceed. Logged out if appropriate.
-						loggedin = 1;
+						loggedin = 1; pass_tries = 0;
 					}
 					else
 					{
+						// fork (S19, #5): slow down brute force; the console answers one web/FTP request at a time,
+						// so a fast guessing loop would otherwise block everything. localhost is not delayed.
+						if(!islike(remote_ip, "127."))
+						{
+							if(++pass_tries >= 16) break;      // too many tries: drop the control connection
+							if(pass_tries >= 3) sys_ppu_thread_sleep(pass_tries - 2); // 1s, 2s, 3s, ...
+						}
 						ssend(conn_s_ftp, FTP_ERROR_430);	// Invalid username or password
 					}
 				}

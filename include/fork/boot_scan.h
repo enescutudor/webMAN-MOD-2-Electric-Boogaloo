@@ -16,7 +16,6 @@
 #endif
 #define BOOTSCAN_SIG	TMP_DIR "/wmfork-scan.sig"
 
-static bool line_value(const char *text, const char *name, char sep, char *value, size_t max); // fork/http_cache.h
 
 static const char *bootscan_dirs[] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO",
 									  "ISO", "video", "GAMEI", "ROMS", CUSTOM_PATH1, CUSTOM_PATH2};

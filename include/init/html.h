@@ -1,6 +1,10 @@
 #define HTML_RECV_SIZE	2048
 #define HTML_RECV_LAST	2047
 
+// fork: line_value() is defined in fork/http_cache.h, which is included later than its first users
+// (ps3mapi_server.h, boot_scan.h); declare it once here, included early in every edition.
+static bool line_value(const char *text, const char *name, char sep, char *value, size_t max);
+
 #define ORANGE		0xf90
 #define MAGENTA		0xf0f
 #define CYAN		0x0ff

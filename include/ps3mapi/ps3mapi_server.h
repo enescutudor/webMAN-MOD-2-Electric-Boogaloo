@@ -556,6 +556,11 @@ static int ps3mapi_command(int conn_s_ps3mapi, int data_s, int pasv_s, char *buf
 									}
 									else
 									{
+										// fork (#10): bound the read to buffer2 (BUFFER_SIZE_PS3MAPI); the HTTP hex path
+										// writes at buffer2 + 0x5500, so cap it smaller so binary + hex both fit
+										if(size > BUFFER_SIZE_PS3MAPI) size = BUFFER_SIZE_PS3MAPI;
+										if(!conn_s_ps3mapi && size > 0x4000) size = 0x4000;
+
 										ps3mapi_get_memory(attached_pid, offset, buffer2, size);
 
 										if(conn_s_ps3mapi)
@@ -1121,6 +1126,7 @@ static int ps3mapi_command(int conn_s_ps3mapi, int data_s, int pasv_s, char *buf
 	return split;
 }
 
+
 static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 {
 	int conn_s_ps3mapi = (int)conn_s_ps3mapi_p; // main communications socket
@@ -1155,6 +1161,22 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 	for(u8 n = 0; n < ip_len; n++) if(ip_address[n] == '.') ip_address[n] = ',';
 
 	ps3mapi_response_status(conn_s_ps3mapi, buffer, PS3MAPI_OK_230);
+
+	// fork (S19, #2, opt-in): if wmfork.cfg has "ps3mapi_allow=<ip-or-prefix>", only that IP (and localhost) may use
+	// PS3MAPI. Off by default = unchanged. A password step is not added: the standard PS3 Manager API client cannot
+	// send one, so an IP allow-list is the enforceable gate. peek/poke and the protocol are untouched.
+	{
+		char remote_ps3mapi[16]; strcopy(remote_ps3mapi, inet_ntoa(conn_info.remote_adr));
+		char cfg[512], allow[64];
+		size_t cfglen = read_file("/dev_hdd0/tmp/wmfork.cfg", cfg, sizeof(cfg) - 1, 0); cfg[cfglen] = '\0';
+		if(line_value(cfg, "ps3mapi_allow", '=', allow, sizeof(allow)) && *allow
+		   && !islike(remote_ps3mapi, allow) && !islike(remote_ps3mapi, "127."))
+		{
+			ps3mapi_response_status(conn_s_ps3mapi, buffer, "421 Not allowed\r\n");
+			sclose(&conn_s_ps3mapi);
+			sys_ppu_thread_exit(0);
+		}
+	}
 
 	sprintf(buffer, PS3MAPI_CONNECT_NOTIF, inet_ntoa(conn_info.remote_adr)); show_msg_with_icon(ICON_NETWORK, buffer);
 

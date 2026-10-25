@@ -325,6 +325,8 @@ static void do_web_command(u64 conn_s_p, const char *wm_url)
 	char param[HTML_RECV_SIZE];
 	char *file_query = param + HTML_RECV_LAST; *file_query = NULL;
 
+	char rip[16]; *rip = '\0'; // fork (S19): the client IP, kept for the CSRF check (cmd gets reused later)
+
  #ifdef WM_REQUEST
 	struct CellFsStat buf; u8 wm_request = wm_url || (cellFsStat(WM_REQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
 
@@ -335,6 +337,7 @@ static void do_web_command(u64 conn_s_p, const char *wm_url)
 
 		char *remote_ip = cmd;
 		strcopy(remote_ip, inet_ntoa(conn_info.remote_adr));
+		strncopy(rip, sizeof(rip), remote_ip); // fork (S19, CSRF): keep it; cmd is reused by ssplit
 
 		// check remote access
 		if(webman_config->bind && is_remote_ip && !islike(remote_ip, webman_config->allow_ip))
@@ -401,6 +404,7 @@ parse_request:
 	s8 sort_order, sort_by;
 	u64 c_len, c_mtime;
 	char if_none_match[48], origin[64], range[48]; // fork: request headers kept before the request is cut at the first line
+	char referer[96], host[64]; // fork (S19): kept for the CSRF check
 
 	u8 is_cpursx;
 	u8 is_popup, auto_mount;
@@ -411,7 +415,7 @@ parse_request:
 	#endif
 
 	retry = served = 0; is_binary = WEB_COMMAND;
-	is_ps3_http  = auto_mount = is_popup = is_cpursx = 0; c_len = c_mtime = 0; *if_none_match = *origin = *range = '\0';
+	is_ps3_http  = auto_mount = is_popup = is_cpursx = 0; c_len = c_mtime = 0; *if_none_match = *origin = *range = *referer = *host = '\0';
 	sort_order = 1, sort_by = 0;
 
 //// process commands ////
@@ -531,6 +535,8 @@ parse_request:
 			line_value(header, "If-None-Match", ':', if_none_match, sizeof(if_none_match));
 			line_value(header, "Origin", ':', origin, sizeof(origin));
 			line_value(header, "Range", ':', range, sizeof(range));
+			line_value(header, "Referer", ':', referer, sizeof(referer)); // fork (S19, CSRF)
+			line_value(header, "Host", ':', host, sizeof(host));           // fork (S19, CSRF)
 
 			for(size_t n = 0; header[n]; n++) {if(header[n] == '\r' || header[n] == '\n' || n >= HTML_RECV_LAST) {header[n] = 0; break;}} // fork (#off-by-one): was HTML_RECV_SIZE (would touch header[2048])
 
@@ -563,6 +569,14 @@ parse_request:
 			#endif
 
 			#include "www_admin.h" // security check
+
+			// fork (S19): refuse a dangerous command issued cross-site by a browser (CSRF). No Origin/Referer
+			// (curl, SFTP relay, apps, XMB) and localhost always pass. See fork/csrf.h.
+			if(csrf_blocked(param, origin, referer, host, rip))
+			{
+				keep_alive = http_response(conn_s, header, param, CODE_FORBIDDEN, "403 Forbidden (cross-site request)");
+				goto exit_handleclient_www;
+			}
 
 			#ifdef VIRTUAL_PAD
 			bool is_pad = islike(param, "/pad.ps3");
